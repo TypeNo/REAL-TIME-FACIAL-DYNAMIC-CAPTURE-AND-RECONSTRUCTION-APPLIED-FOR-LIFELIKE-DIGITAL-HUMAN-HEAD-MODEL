@@ -38,7 +38,8 @@ def set_rasterizer(type = 'pytorch3d'):
         standard_rasterize_cuda = \
             load(name='standard_rasterize_cuda', 
                 sources=[f'{curr_dir}/rasterizer/standard_rasterize_cuda.cpp', f'{curr_dir}/rasterizer/standard_rasterize_cuda_kernel.cu'], 
-                extra_cuda_cflags = ['-std=c++17', '-ccbin', 'E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe']) # cuda10.2 is not compatible with gcc9. Specify gcc 7 
+                #extra_cuda_cflags = ['-std=c++17', '-ccbin', 'E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\Hostx64\\x64\\cl.exe']) # cuda10.2 is not compatible with gcc9. Specify gcc 7 
+                extra_cuda_cflags = ['-std=c++17', '-ccbin', 'E:/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.40.33807/bin/Hostx64/x64/cl.exe']) # cuda10.2 is not compatible with gcc9. Specify gcc 7 
                 #extra_cuda_cflags = ['-std=c++14', '-ccbin=$$(which gcc-7)']) # cuda10.2 is not compatible with gcc9. Specify gcc 7 
         from standard_rasterize_cuda import standard_rasterize
         # If JIT does not work, try manually installation first

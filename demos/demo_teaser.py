@@ -21,6 +21,7 @@ from scipy.io import savemat
 import argparse
 import imageio
 from skimage.transform import rescale
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import torch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -31,6 +32,7 @@ from decalib.utils.rotation_converter import batch_euler2axis, deg2rad
 from decalib.utils.config import cfg as deca_cfg
 
 def main(args):
+    torch.cuda.empty_cache()
     savefolder = args.savefolder
     device = args.device
     os.makedirs(savefolder, exist_ok=True)

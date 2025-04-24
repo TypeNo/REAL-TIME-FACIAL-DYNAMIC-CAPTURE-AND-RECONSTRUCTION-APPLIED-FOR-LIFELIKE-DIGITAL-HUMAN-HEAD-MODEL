@@ -235,7 +235,10 @@ class DECA(nn.Module):
             ## extract texture
             ## TODO: current resolution 256x256, support higher resolution, and add visibility
             uv_pverts = self.render.world2uv(trans_verts)
-            uv_gt = F.grid_sample(images, uv_pverts.permute(0,2,3,1)[:,:,:,:2], mode='bilinear', align_corners=False)
+            images_resized = F.interpolate(images, size=(self.uv_size, self.uv_size), mode='bilinear', align_corners=False)
+            uv_gt = F.grid_sample(images_resized, uv_pverts.permute(0,2,3,1)[:,:,:,:2], mode='bilinear', align_corners=False)
+            #uv_gt = F.interpolate(uv_gt, size=(256, 256), mode='bilinear', align_corners=False)
+            uv_gt = F.interpolate(uv_gt, size=(256, 256), mode='bilinear', align_corners=False)*uv_shading
             if self.cfg.model.use_tex:
                 ## TODO: poisson blending should give better-looking results
                 if self.cfg.model.extract_tex:
@@ -245,6 +248,8 @@ class DECA(nn.Module):
             else:
                 uv_texture_gt = uv_gt[:,:3,:,:]*self.uv_face_eye_mask + (torch.ones_like(uv_gt[:,:3,:,:])*(1-self.uv_face_eye_mask)*0.7)
             
+            #rendered_images = F.grid_sample(uv_texture_gt, grid, align_corners=False)
+            rendered_images = F.grid_sample(uv_texture_gt, grid, align_corners=False)*alpha_images
             opdict['uv_texture_gt'] = uv_texture_gt
             visdict = {
                 'inputs': images, 
@@ -254,7 +259,10 @@ class DECA(nn.Module):
                 'shape_detail_images': shape_detail_images
             }
             if self.cfg.model.use_tex:
-                visdict['rendered_images'] = ops['images']
+                #visdict['rendered_images'] = ops['images']
+                visdict['rendered_images'] = rendered_images
+
+                
 
             return opdict, visdict
 
@@ -290,6 +298,7 @@ class DECA(nn.Module):
         faces = self.render.faces[0].cpu().numpy()
         texture = util.tensor2image(opdict['uv_texture_gt'][i])
         uvcoords = self.render.raw_uvcoords[0].cpu().numpy()
+        
         uvfaces = self.render.uvfaces[0].cpu().numpy()
         # save coarse mesh, with texture and normal map
         normal_map = util.tensor2image(opdict['uv_detail_normals'][i]*0.5 + 0.5)
@@ -301,7 +310,8 @@ class DECA(nn.Module):
         # upsample mesh, save detailed mesh
         texture = texture[:,:,[2,1,0]]
         normals = opdict['normals'][i].cpu().numpy()
-        displacement_map = opdict['displacement_map'][i].cpu().numpy().squeeze()
+        #displacement_map = opdict['displacement_map'][i].cpu().numpy().squeeze()
+        displacement_map = opdict['displacement_map'][i].cpu().detach().numpy().squeeze()
         dense_vertices, dense_colors, dense_faces = util.upsample_mesh(vertices, normals, faces, displacement_map, texture, self.dense_template)
         util.write_obj(filename.replace('.obj', '_detail.obj'), 
                         dense_vertices, 

@@ -38,6 +38,7 @@ def main(args):
     # run DECA
     deca_cfg.model.use_tex = args.useTex
     deca_cfg.rasterizer_type = args.rasterizer_type
+    deca_cfg.model.extract_tex = True
     deca = DECA(config = deca_cfg, device=device)
     # identity reference
     i = 0

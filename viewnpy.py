@@ -2,7 +2,7 @@ import numpy as np
 
 # === Load the .npy file ===
 file_path = './data/landmark_embedding.npy'  # <- Change this to your file path
-data = np.load(file_path, allow_pickle=True)
+data = np.load(file_path, allow_pickle=True, encoding='bytes')
 
 # === If data is an object array containing a dict ===
 if isinstance(data, np.ndarray) and data.dtype == 'object':
@@ -19,6 +19,12 @@ if isinstance(data, dict):
         if isinstance(value, np.ndarray):
             print(f"{key}: shape = {value.shape}, dtype = {value.dtype}")
         else:
-            print(f"{key}: type = {type(value)} (not ndarray)")
+            #print(f"{key}: type = {type(value)} (not ndarray)")
+            print(f"{key}: shape = {value.shape}, dtype = {value.dtype}")
 else:
-    print("Data is not a dictionary. Type:", type(data))
+    for idx, value in enumerate(data):
+        shape = value.shape if hasattr(value, 'shape') else 'N/A'
+        print(f"Index {idx}, Shape: {shape}, Value:\n{value}\n")
+
+
+
