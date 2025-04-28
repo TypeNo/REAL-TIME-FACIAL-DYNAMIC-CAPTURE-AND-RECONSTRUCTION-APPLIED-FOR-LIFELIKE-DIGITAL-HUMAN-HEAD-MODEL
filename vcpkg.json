@@ -1,0 +1,14 @@
+{
+    "name": "fyp",
+    "version": "1.0",
+    "dependencies": [
+      "freeglut",
+      "glew",
+      "glfw3",
+      "glm",
+      "glad",
+      "imgui",
+      "opengl",
+      "pybind11"
+    ]
+  }

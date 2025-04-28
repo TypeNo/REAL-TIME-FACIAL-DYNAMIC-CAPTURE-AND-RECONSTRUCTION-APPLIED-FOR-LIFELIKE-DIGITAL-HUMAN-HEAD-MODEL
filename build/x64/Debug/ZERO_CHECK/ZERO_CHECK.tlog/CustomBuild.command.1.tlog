@@ -1,0 +1,10 @@
+^E:\PROJECT\DECA3\DECA\BUILD\CMAKEFILES\26C6D27E731B5CCFFD58323951C72C00\GENERATE.STAMP.RULE
+setlocal
+"E:\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SE:/Project/DECA3/DECA -BE:/Project/DECA3/DECA/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file E:/Project/DECA3/DECA/build/FYP.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

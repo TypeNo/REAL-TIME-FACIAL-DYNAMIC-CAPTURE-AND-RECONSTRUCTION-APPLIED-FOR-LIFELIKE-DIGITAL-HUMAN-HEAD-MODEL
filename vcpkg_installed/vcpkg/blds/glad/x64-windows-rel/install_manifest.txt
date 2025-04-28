@@ -1,0 +1,7 @@
+E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/glad_x64-windows/lib/glad.lib
+E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/glad_x64-windows/include/glad/glad.h
+E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/glad_x64-windows/include/KHR/khrplatform.h
+E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/glad_x64-windows/lib/cmake/glad/gladConfig.cmake
+E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/glad_x64-windows/lib/cmake/glad/gladConfigVersion.cmake
+E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/glad_x64-windows/lib/cmake/glad/gladTargets.cmake
+E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/glad_x64-windows/lib/cmake/glad/gladTargets-release.cmake

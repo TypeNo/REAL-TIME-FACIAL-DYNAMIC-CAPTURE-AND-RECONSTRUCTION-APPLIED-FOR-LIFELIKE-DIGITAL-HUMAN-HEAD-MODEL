@@ -1,0 +1,8 @@
+# ninja log v5
+7	515	7674145727654028	include/glad/glad.h	a2a7c81370e64ca
+7	515	7674145727654028	src/glad.c	a2a7c81370e64ca
+7	515	7674145727654028	E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-rel/include/glad/glad.h	a2a7c81370e64ca
+7	515	7674145727654028	E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-rel/src/glad.c	a2a7c81370e64ca
+516	907	7674145732674024	CMakeFiles/glad.dir/src/glad.c.obj	2c90fbf74c03ff04
+908	990	7674145733434031	glad.lib	6f122e645e2aeebe
+990	1112	0	CMakeFiles/install.util	61d901a2a1b83f5b

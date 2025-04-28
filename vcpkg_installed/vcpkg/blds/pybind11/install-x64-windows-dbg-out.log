@@ -1,0 +1,50 @@
+Change Dir: 'E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/pybind11/x64-windows-dbg'
+
+Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe" -v -v -j13 install
+-- Install configuration: "Debug"
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/attr.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/buffer_info.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/cast.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/chrono.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/common.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/complex.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/detail
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/detail/class.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/detail/common.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/detail/descr.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/detail/init.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/detail/internals.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/detail/typeid.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/detail/type_caster_base.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/eigen
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/eigen/common.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/eigen/matrix.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/eigen/tensor.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/eigen.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/embed.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/eval.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/functional.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/gil.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/iostream.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/numpy.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/operators.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/options.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/pybind11.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/pytypes.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/stl
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/stl/filesystem.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/stl.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/stl_bind.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/include/pybind11/type_caster_pyobject_ptr.h
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/cmake/pybind11/pybind11Config.cmake
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/cmake/pybind11/pybind11ConfigVersion.cmake
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/cmake/pybind11/FindPythonLibsNew.cmake
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/cmake/pybind11/pybind11Common.cmake
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/cmake/pybind11/pybind11Tools.cmake
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/cmake/pybind11/pybind11NewTools.cmake
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/cmake/pybind11/pybind11Targets.cmake
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/pkgconfig/pybind11.pc
+[0/2] C:\Users\acer\AppData\Local\vcpkg\downloads\tools\cmake-3.27.1-windows\cmake-3.27.1-windows-i386\bin\cmake.exe -P E:\Project\DECA3\DECA\vcpkg_installed\vcpkg\blds\pybind11\x64-windows-dbg\CMakeFiles\VerifyGlobs.cmake
+[0/1] cmd.exe /C "cd /D E:\Project\DECA3\DECA\vcpkg_installed\vcpkg\blds\pybind11\x64-windows-dbg && C:\Users\acer\AppData\Local\vcpkg\downloads\tools\cmake-3.27.1-windows\cmake-3.27.1-windows-i386\bin\cmake.exe -P cmake_install.cmake"
+

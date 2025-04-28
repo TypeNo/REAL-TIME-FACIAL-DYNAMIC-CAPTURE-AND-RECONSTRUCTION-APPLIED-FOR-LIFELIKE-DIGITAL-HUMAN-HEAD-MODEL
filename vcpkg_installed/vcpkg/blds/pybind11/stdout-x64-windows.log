@@ -1,0 +1,16 @@
+-- Downloading https://github.com/pybind/pybind11/archive/v2.11.1.tar.gz -> pybind-pybind11-v2.11.1.tar.gz...
+-- Extracting source C:/Users/acer/AppData/Local/vcpkg/downloads/pybind-pybind11-v2.11.1.tar.gz
+-- Applying patch fix-debug-link.patch
+-- Using source at E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/pybind11/src/v2.11.1-9a1aec74ca.clean
+-- Found external ninja('1.11.0').
+-- Configuring x64-windows
+-- Building x64-windows-dbg
+-- Building x64-windows-rel
+-- Fixing pkgconfig file: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/share/pkgconfig/pybind11.pc
+-- Using cached msys2-mingw-w64-x86_64-pkgconf-1~2.1.0-1-any.pkg.tar.zst.
+-- Using cached msys2-msys2-runtime-3.4.10-4-x86_64.pkg.tar.zst.
+-- Using msys root at C:/Users/acer/AppData/Local/vcpkg/downloads/tools/msys2/fdbea3694fb5c0d4
+-- Fixing pkgconfig file: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug/share/pkgconfig/pybind11.pc
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/share/pybind11/usage
+-- Installing: E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/share/pybind11/copyright
+-- Performing post-build validation
