@@ -11,7 +11,27 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #define STB_IMAGE_IMPLEMENTATION
-//#include "stb_image.h"
+#include "stb_image.h"
+#include "ImGuiFileDialog.h"
+#include <cstdlib>
+#include <string>
+#include <pybind11/embed.h> // Everything needed for embedding
+namespace py = pybind11;
+
+
+
+std::string GetDesktopPath() {
+    #ifdef _WIN32
+        const char* userProfile = std::getenv("USERPROFILE");
+        if (userProfile)
+            return std::string(userProfile) + "\\Desktop";
+    #elif __APPLE__ || __linux__
+        const char* home = std::getenv("HOME");
+        if (home)
+            return std::string(home) + "/Desktop";
+    #endif
+        return "."; // fallback to current directory
+    }
 
 void EnableDarkTitleBar(HWND hwnd) {
     BOOL value = TRUE;
@@ -24,6 +44,32 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 void RenderFacialReconstructionTab();
+
+GLuint LoadTextureFromFile(const char* filename)
+{
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4);
+    if (data == NULL)
+    {
+        std::cout << "Failed to load image: " << filename << std::endl;
+        return 0;
+    }
+
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_image_free(data);
+
+    return textureID;
+}
+
+
 
 int main()
 {
@@ -142,7 +188,7 @@ int main()
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -163,6 +209,13 @@ int main()
 
 void RenderFacialReconstructionTab()
 {
+    static GLuint imageTexture = 0; // <--- static, so it loads only once
+
+    if (imageTexture == 0)
+    {
+        imageTexture = LoadTextureFromFile("E:/Project/DECA3/DECA/TestSamples/examples/results/IMG_0392_inputs/IMG_0392_inputs_inputs.jpg"); // <-- change path here
+    }
+
     // Split vertically: Left big panel + Right control panel
     ImGui::BeginChild("LeftSection", ImVec2(ImGui::GetContentRegionAvail().x * 0.7f, 0), false);
     {
@@ -177,7 +230,9 @@ void RenderFacialReconstructionTab()
                     if (ImGui::BeginTabItem("Image Preview"))
                     {
                         ImGui::Text("Image Preview Content");
-                        ImGui::Image((ImTextureID)123, ImVec2(-1, -1)); // Placeholder image
+                        ImVec2 availableSize = ImGui::GetContentRegionAvail();
+                        ImGui::Image((ImTextureID)(intptr_t)imageTexture, availableSize);
+                        //ImGui::Image((ImTextureID)123, ImVec2(-1, -1)); // Placeholder image
                         ImGui::EndTabItem();
                     }
                     ImGui::EndTabBar();
@@ -220,18 +275,53 @@ void RenderFacialReconstructionTab()
     // Right Control Panel
     ImGui::BeginChild("RightSection", ImVec2(0, 0), true);
     {
-        ImGui::Text("Capture Source");
-
-        static int captureSourceType = 0;
-        ImGui::Combo("Capture Source Type", &captureSourceType, "Offline\0Live\0");
-
-        static char captureSourcePath[256] = "C:/Document/Clip1";
-        ImGui::InputText("Capture Source", captureSourcePath, IM_ARRAYSIZE(captureSourcePath));
-
-        static int startFrame = 0, endFrame2 = 464;
+        ImGui::Text("[Capture Source]");
+    
+        static std::string selectedFilePath;
+    
+        // Begin horizontal group: Button + Selected Path
+        ImGui::BeginGroup();
+        if (ImGui::Button("Choose File")) {
+            IGFD::FileDialogConfig config;
+            config.path = GetDesktopPath(); // Default to Desktop
+            config.countSelectionMax = 1;
+            config.flags = ImGuiFileDialogFlags_Modal;
+    
+            ImGuiFileDialog::Instance()->OpenDialog(
+                "ChooseCapture",
+                "Select Capture Source",
+                "Images and Videos{.png,.jpg,.jpeg,.bmp,.gif,.mp4,.avi,.mov,.mkv}",
+                config
+            );
+        }
+        ImGui::SameLine();
+    
+        // Limit max display width for the selected path
+        float availableWidth = ImGui::GetContentRegionAvail().x;
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + availableWidth);
+        ImGui::TextWrapped("%s", selectedFilePath.empty() ? "<No file selected>" : selectedFilePath.c_str());
+        ImGui::PopTextWrapPos();
+        ImGui::EndGroup();
+    
+        // Display file dialog (modal popup)
+        if (ImGuiFileDialog::Instance()->Display("ChooseCapture", ImGuiWindowFlags_NoCollapse, ImVec2(700, 400))) {
+            ImGui::SetNextWindowFocus();
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                selectedFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
+    
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+    
+        // Frame range input
+        static int startFrame = 0, endFrame = 464;
         ImGui::InputInt("Start Frame to Process", &startFrame);
-        ImGui::InputInt("End Frame to Process", &endFrame2);
+        ImGui::InputInt("End Frame to Process", &endFrame);
     }
+    
     ImGui::EndChild();
 }
 

@@ -4,6 +4,9 @@
     <ClCompile Include="E:\Project\DECA3\DECA\src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="E:\Project\DECA3\DECA\external\ImGuiFileDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="E:\Project\DECA3\DECA\CMakeLists.txt" />

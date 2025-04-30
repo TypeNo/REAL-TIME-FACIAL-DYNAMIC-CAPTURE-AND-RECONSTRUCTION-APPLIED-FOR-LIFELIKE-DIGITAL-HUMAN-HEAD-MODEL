@@ -63,6 +63,7 @@ class TestData(Dataset):
             exit()
         # print('total {} images'.format(len(self.imagepath_list)))
         self.imagepath_list = sorted(self.imagepath_list)
+        self.imageinputname = os.path.splitext(os.path.split(testpath)[-1])[0]
         self.crop_size = crop_size
         self.scale = scale
         self.iscrop = iscrop
@@ -140,4 +141,5 @@ class TestData(Dataset):
                 'imagename': imagename,
                 'tform': torch.tensor(tform.params).float(),
                 'original_image': torch.tensor(image.transpose(2,0,1)).float(),
+                'imageinputname': self.imageinputname
                 }

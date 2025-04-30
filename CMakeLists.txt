@@ -16,11 +16,6 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 # Set output directory for compiled binaries
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Gather source files
-file(GLOB SRC_FILES
-    src/*.cpp
-)
-
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/vcpkg_installed/vcpkg/blds/imgui/src/v1.90.2-4442117b09.clean)
 
 add_library(imgui
@@ -40,9 +35,32 @@ target_include_directories(imgui PUBLIC
     ${IMGUI_DIR}/examples/libs/glfw/include
 )
 
+set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
+
+add_library(IGFD STATIC
+    ${EXTERNAL_DIR}/ImGuiFileDialog.cpp
+    ${EXTERNAL_DIR}/ImGuiFileDialog.h
+    ${EXTERNAL_DIR}/ImGuiFileDialogConfig.h
+)
+
+target_include_directories(IGFD PUBLIC
+    ${EXTERNAL_DIR}
+    ${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-windows/include
+)
+
+
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external)
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/ImGuiFileDialog-master)
+
+# Gather source files
+file(GLOB SRC_FILES
+    src/*.cpp
+)
 
 # Create the executable
-add_executable(FYP ${SRC_FILES})
+add_executable(FYP ${SRC_FILES} ${EXTERNAL_DIR}/ImGuiFileDialog.cpp)
+
 
 #list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-windows/share")
 # Link external libraries installed via vcpkg
@@ -54,8 +72,26 @@ set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-windows/share" ${
 find_package(glfw3 CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
+
+# Set the paths to the Conda Python include directory and library
+set(Python3_EXECUTABLE "E:/anaconda3/envs/pytorch3d/python")
+set(Python3_INCLUDE_DIR "E:/anaconda3/envs/pytorch3d/include")
+set(Python3_LIBRARY "E:/anaconda3/envs/pytorch3d/libs/python311.lib")
+
+include_directories(${Python3_INCLUDE_DIR})
+link_directories(${Python3_LIBRARY})
+
+
+# Find Python from the Conda environment
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+find_package(pybind11 CONFIG REQUIRED)
+find_package(Python REQUIRED)
+
+
+
+
 # Link libraries (vcpkg will handle these automatically)
-target_link_libraries(FYP imgui glfw)
+target_link_libraries(FYP imgui glfw IGFD ${Python3_LIBRARIES})
 
 # OpenGL setup for macOS
 if(APPLE)

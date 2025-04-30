@@ -249,7 +249,11 @@ class DECA(nn.Module):
                 uv_texture_gt = uv_gt[:,:3,:,:]*self.uv_face_eye_mask + (torch.ones_like(uv_gt[:,:3,:,:])*(1-self.uv_face_eye_mask)*0.7)
             
             #rendered_images = F.grid_sample(uv_texture_gt, grid, align_corners=False)
-            rendered_images = F.grid_sample(uv_texture_gt, grid, align_corners=False)*alpha_images
+            if background is None:
+                rendered_images = F.grid_sample(uv_texture_gt, grid, align_corners=False)*alpha_images
+            else:
+                rendered_images = F.grid_sample(uv_texture_gt, grid, align_corners=False)*alpha_images+ background*(1.-alpha_images)
+            
             opdict['uv_texture_gt'] = uv_texture_gt
             visdict = {
                 'inputs': images, 
