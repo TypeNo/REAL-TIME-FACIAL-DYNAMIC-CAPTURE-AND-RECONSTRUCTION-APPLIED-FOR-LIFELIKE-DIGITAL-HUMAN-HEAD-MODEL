@@ -16,6 +16,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 # Set output directory for compiled binaries
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+set(ENV{PATH} "E:/anaconda3/envs/pytorch3d;$ENV{PATH}")
+
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/vcpkg_installed/vcpkg/blds/imgui/src/v1.90.2-4442117b09.clean)
 
 add_library(imgui
@@ -73,22 +75,31 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
 
+set(Python3_VERSION "3.11")
+
 # Set the paths to the Conda Python include directory and library
-set(Python3_EXECUTABLE "E:/anaconda3/envs/pytorch3d/python")
-set(Python3_INCLUDE_DIR "E:/anaconda3/envs/pytorch3d/include")
-set(Python3_LIBRARY "E:/anaconda3/envs/pytorch3d/libs/python311.lib")
+#set(Python3_EXECUTABLE "E:/anaconda3/envs/pytorch3d/python")
+#set(Python3_INCLUDE_DIR "E:/anaconda3/envs/pytorch3d/include")
+#set(Python3_LIBRARY "E:/anaconda3/envs/pytorch3d/libs/python311.lib")
 
 include_directories(${Python3_INCLUDE_DIR})
 link_directories(${Python3_LIBRARY})
 
 
 # Find Python from the Conda environment
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+set(Python3_ROOT_DIR "E:/anaconda3/envs/pytorch3d")
+find_package(Python3 3.11 EXACT REQUIRED COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Python REQUIRED)
 
+message(STATUS "Python3 Version: ${Python3_VERSION}")
+message(STATUS "Python3 Executable: ${Python3_EXECUTABLE}")
+message(STATUS "Python3 Include Dirs: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python3 Libraries: ${Python3_LIBRARIES}")
+message(STATUS "pybind11 Version: ${pybind11_VERSION}")
+message(STATUS "pybind11 Include Dirs: ${pybind11_INCLUDE_DIRS}")
 
-
+target_include_directories(FYP PRIVATE ${Python3_INCLUDE_DIRS})
 
 # Link libraries (vcpkg will handle these automatically)
 target_link_libraries(FYP imgui glfw IGFD ${Python3_LIBRARIES})

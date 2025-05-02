@@ -409,7 +409,7 @@ FIND_PACKAGE_MESSAGE_DETAILS_PYTHON:INTERNAL=E:/anaconda3/envs/pytorch3d/python3
 //Details about finding Python
 FIND_PACKAGE_MESSAGE_DETAILS_Python:INTERNAL=[C:/Users/acer/AppData/Local/Programs/Python/Python310/python.exe][cfound components: Interpreter ][v3.10.0()]
 //Details about finding Python3
-FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[E:/anaconda3/envs/pytorch3d/python][E:/anaconda3/envs/pytorch3d/libs/python311.lib][E:/anaconda3/envs/pytorch3d/include][cfound components: Interpreter Development Development.Module Development.Embed ][v3.11.11()]
+FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[E:/anaconda3/envs/pytorch3d/python.exe][E:/anaconda3/envs/pytorch3d/libs/python311.lib][E:/anaconda3/envs/pytorch3d/include][cfound components: Interpreter Development Development.Module Development.Embed ][v3.11.11(3.11)]
 //Details about finding PythonInterp
 FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[E:/anaconda3/envs/pytorch3d/python][v3.11.11(3.6)]
 //Details about finding Threads
@@ -421,7 +421,7 @@ OPENGL_gl_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENGL_glu_LIBRARY
 OPENGL_glu_LIBRARY-ADVANCED:INTERNAL=1
 //Python executable during the last CMake run
-PYBIND11_PYTHON_EXECUTABLE_LAST:INTERNAL=E:/anaconda3/envs/pytorch3d/python
+PYBIND11_PYTHON_EXECUTABLE_LAST:INTERNAL=E:/anaconda3/envs/pytorch3d/python.exe
 //ADVANCED property for variable: PYTHON_DEBUG_LIBRARY
 PYTHON_DEBUG_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PYTHON_EXECUTABLE
@@ -445,19 +445,22 @@ Python_ADDITIONAL_VERSIONS:INTERNAL=3.11;3.10;3.9;3.8;3.7;3.6
 _Python:INTERNAL=Python3
 //Compiler reason failure
 _Python3_Compiler_REASON_FAILURE:INTERNAL=
-_Python3_DEVELOPMENT_EMBED_SIGNATURE:INTERNAL=56043c8ad8ed3ac80827f704eddf66cc
-_Python3_DEVELOPMENT_MODULE_SIGNATURE:INTERNAL=56043c8ad8ed3ac80827f704eddf66cc
+_Python3_DEVELOPMENT_EMBED_SIGNATURE:INTERNAL=92f42c60d2bd8d59a60e0efa08bfdb1a
+_Python3_DEVELOPMENT_MODULE_SIGNATURE:INTERNAL=92f42c60d2bd8d59a60e0efa08bfdb1a
 //Development reason failure
 _Python3_Development_REASON_FAILURE:INTERNAL=
-_Python3_EXECUTABLE:INTERNAL=E:/anaconda3/envs/pytorch3d/python
+//Path to a program.
+_Python3_EXECUTABLE:INTERNAL=E:/anaconda3/envs/pytorch3d/python.exe
+//Path to a file.
 _Python3_INCLUDE_DIR:INTERNAL=E:/anaconda3/envs/pytorch3d/include
 //Python3 Properties
 _Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;11;11;64;;cp311-win_amd64;;E:\anaconda3\envs\pytorch3d\Lib;E:\anaconda3\envs\pytorch3d\Lib;E:\anaconda3\envs\pytorch3d\Lib\site-packages;E:\anaconda3\envs\pytorch3d\Lib\site-packages
-_Python3_INTERPRETER_SIGNATURE:INTERNAL=e4aea0728e1e777014b5fd1adb1389e2
+_Python3_INTERPRETER_SIGNATURE:INTERNAL=22b3e2706da8f4800f266370b5d8fa45
 //Interpreter reason failure
 _Python3_Interpreter_REASON_FAILURE:INTERNAL=
 //Path to a library.
 _Python3_LIBRARY_DEBUG:INTERNAL=_Python3_LIBRARY_DEBUG-NOTFOUND
+//Path to a library.
 _Python3_LIBRARY_RELEASE:INTERNAL=E:/anaconda3/envs/pytorch3d/libs/python311.lib
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
