@@ -190,9 +190,6 @@ CMAKE_TOOLCHAIN_FILE:STRING=E:/Microsoft Visual Studio/2022/Community/VC/vcpkg/s
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
-//The directory containing a CMake configuration file for CONFIG.
-CONFIG_DIR:PATH=CONFIG_DIR-NOTFOUND
-
 //Value Computed by CMake
 FYP_BINARY_DIR:STATIC=E:/Project/DECA3/DECA/build
 
@@ -205,65 +202,17 @@ FYP_SOURCE_DIR:STATIC=E:/Project/DECA3/DECA
 //Path to a file.
 GLFW_DLL:FILEPATH=E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/bin/glfw3.dll
 
-//The directory containing a CMake configuration file for G.
-G_DIR:PATH=G_DIR-NOTFOUND
-
-//The directory containing a CMake configuration file for IFGD.
-IFGD_DIR:PATH=IFGD_DIR-NOTFOUND
-
 //OpenGL library for win32
 OPENGL_gl_LIBRARY:STRING=opengl32
 
 //GLU library for win32
 OPENGL_glu_LIBRARY:STRING=glu32
 
-//Overwrite cached values read from Python library (classic search).
-// Turn off if cross-compiling and manually setting these values.
-PYBIND11_PYTHONLIBS_OVERWRITE:BOOL=ON
-
-//Python version to use for compiling modules
-PYBIND11_PYTHON_VERSION:STRING=
-
-//Path to a library.
-PYTHON_DEBUG_LIBRARY:FILEPATH=PYTHON_DEBUG_LIBRARY-NOTFOUND
-
-//Path to a program.
-PYTHON_EXECUTABLE:FILEPATH=C:/Users/acer/AppData/Local/Programs/Python/Python310/python.exe
-
-//Path to a library.
-PYTHON_LIBRARY:FILEPATH=
-
-//Path to a library.
-PYTHON_LIBRARY_DEBUG:FILEPATH=PYTHON_LIBRARY_DEBUG-NOTFOUND
-
-//Path to a library.
-PYTHON_LIBRARY_RELEASE:FILEPATH=PYTHON_LIBRARY_RELEASE-NOTFOUND
-
-VCPKG_TARGET_TRIPLET:STRING=x64-windows
-
-//The directory containing a CMake configuration file for glf.
-glf_DIR:PATH=glf_DIR-NOTFOUND
-
 //The directory containing a CMake configuration file for glfw3.
 glfw3_DIR:PATH=E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/glfw3
 
-//The directory containing a CMake configuration file for glfw.
-glfw_DIR:PATH=glfw_DIR-NOTFOUND
-
-//The directory containing a CMake configuration file for ifgd.
-ifgd_DIR:PATH=ifgd_DIR-NOTFOUND
-
-//The directory containing a CMake configuration file for imgui.
-imgui_DIR:PATH=E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/imgui
-
 //The directory containing a CMake configuration file for pybind11.
 pybind11_DIR:PATH=E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/pybind11
-
-//The directory containing a CMake configuration file for pybind.
-pybind_DIR:PATH=pybind_DIR-NOTFOUND
-
-//The directory containing a CMake configuration file for stb_image.
-stb_image_DIR:PATH=stb_image_DIR-NOTFOUND
 
 
 ########################
@@ -404,14 +353,8 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding OpenGL
 FIND_PACKAGE_MESSAGE_DETAILS_OpenGL:INTERNAL=[opengl32][c ][v()]
-//Details about finding PYTHON
-FIND_PACKAGE_MESSAGE_DETAILS_PYTHON:INTERNAL=E:/anaconda3/envs/pytorch3d/python3.11.11
-//Details about finding Python
-FIND_PACKAGE_MESSAGE_DETAILS_Python:INTERNAL=[C:/Users/acer/AppData/Local/Programs/Python/Python310/python.exe][cfound components: Interpreter ][v3.10.0()]
 //Details about finding Python3
 FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[E:/anaconda3/envs/pytorch3d/python.exe][E:/anaconda3/envs/pytorch3d/libs/python311.lib][E:/anaconda3/envs/pytorch3d/include][cfound components: Interpreter Development Development.Module Development.Embed ][v3.11.11(3.11)]
-//Details about finding PythonInterp
-FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[E:/anaconda3/envs/pytorch3d/python][v3.11.11(3.6)]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //Test HAS_MSVC_GL_LTCG
@@ -422,26 +365,9 @@ OPENGL_gl_LIBRARY-ADVANCED:INTERNAL=1
 OPENGL_glu_LIBRARY-ADVANCED:INTERNAL=1
 //Python executable during the last CMake run
 PYBIND11_PYTHON_EXECUTABLE_LAST:INTERNAL=E:/anaconda3/envs/pytorch3d/python.exe
-//ADVANCED property for variable: PYTHON_DEBUG_LIBRARY
-PYTHON_DEBUG_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: PYTHON_EXECUTABLE
-PYTHON_EXECUTABLE-ADVANCED:INTERNAL=1
-PYTHON_INCLUDE_DIRS:INTERNAL=E:/anaconda3/envs/pytorch3d/Include
 //Python debug status
 PYTHON_IS_DEBUG:INTERNAL=0
-PYTHON_LIBRARIES:INTERNAL=
-//ADVANCED property for variable: PYTHON_LIBRARY
-PYTHON_LIBRARY-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: PYTHON_LIBRARY_DEBUG
-PYTHON_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: PYTHON_LIBRARY_RELEASE
-PYTHON_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
 PYTHON_MODULE_EXTENSION:INTERNAL=.cp311-win_amd64.pyd
-PYTHON_MODULE_PREFIX:INTERNAL=
-PYTHON_VERSION:INTERNAL=3.11.11
-PYTHON_VERSION_MAJOR:INTERNAL=3
-PYTHON_VERSION_MINOR:INTERNAL=11
-Python_ADDITIONAL_VERSIONS:INTERNAL=3.11;3.10;3.9;3.8;3.7;3.6
 _Python:INTERNAL=Python3
 //Compiler reason failure
 _Python3_Compiler_REASON_FAILURE:INTERNAL=
@@ -451,7 +377,6 @@ _Python3_DEVELOPMENT_MODULE_SIGNATURE:INTERNAL=92f42c60d2bd8d59a60e0efa08bfdb1a
 _Python3_Development_REASON_FAILURE:INTERNAL=
 //Path to a program.
 _Python3_EXECUTABLE:INTERNAL=E:/anaconda3/envs/pytorch3d/python.exe
-//Path to a file.
 _Python3_INCLUDE_DIR:INTERNAL=E:/anaconda3/envs/pytorch3d/include
 //Python3 Properties
 _Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;11;11;64;;cp311-win_amd64;;E:\anaconda3\envs\pytorch3d\Lib;E:\anaconda3\envs\pytorch3d\Lib;E:\anaconda3\envs\pytorch3d\Lib\site-packages;E:\anaconda3\envs\pytorch3d\Lib\site-packages
@@ -465,18 +390,7 @@ _Python3_LIBRARY_RELEASE:INTERNAL=E:/anaconda3/envs/pytorch3d/libs/python311.lib
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 //Path to a library.
-_Python3_RUNTIME_LIBRARY_RELEASE:INTERNAL=C:/Users/acer/AppData/Local/Programs/Python/Python310/python310.dll
-//Compiler reason failure
-_Python_Compiler_REASON_FAILURE:INTERNAL=
-//Development reason failure
-_Python_Development_REASON_FAILURE:INTERNAL=
-//Path to a program.
-_Python_EXECUTABLE:INTERNAL=C:/Users/acer/AppData/Local/Programs/Python/Python310/python.exe
-//Python Properties
-_Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;10;0;64;32;;cp310-win_amd64;;C:\Users\acer\AppData\Local\Programs\Python\Python310\Lib;C:\Users\acer\AppData\Local\Programs\Python\Python310\Lib;C:\Users\acer\AppData\Local\Programs\Python\Python310\Lib\site-packages;C:\Users\acer\AppData\Local\Programs\Python\Python310\Lib\site-packages
-_Python_INTERPRETER_SIGNATURE:INTERNAL=6feeabb82172053b9b9c5706f06c4594
-//NumPy reason failure
-_Python_NumPy_REASON_FAILURE:INTERNAL=
+_Python3_RUNTIME_LIBRARY_RELEASE:INTERNAL=E:/anaconda3/envs/pytorch3d/python311.dll
 //Directories where pybind11 and possibly Python headers are located
 pybind11_INCLUDE_DIRS:INTERNAL=E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/include;E:/anaconda3/envs/pytorch3d/include
 

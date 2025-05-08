@@ -20,12 +20,27 @@
 namespace py = pybind11;
 #include <thread>
 #include <atomic>
+using namespace std::chrono_literals;
+#include <chrono>
+//#include "progress.hpp"
+#include <sstream> // for std::stringstream
+#include <cmath> // For sin() and M_PI
+#include "progress_shared.hpp"
+#include <windows.h>
+
+typedef void (__cdecl *update_progress_t)(int, int);
+typedef int (__cdecl *get_progress_t)();
+typedef int (*GetProgressFunc)();
 
 // Global or class-level flag and thread
 std::thread pythonThread;
 std::atomic<bool> shouldRunPython(false);
 std::string pendingPythonPath;
 bool pythonThreadRunning = false;
+// Global variables for progress
+float currentProgress = 0.0f; // normalized: 0.0 - 1.0
+float Total= 0.0f;
+std::string progressLabel = "Waiting...";
 
 
 
@@ -109,6 +124,7 @@ void runPythonConstruct(const std::string& selectedFilePath) {
         std::cout << "Attempting to import face_reconstruct..." << std::endl;
         py::module face_reconstruct = py::module::import("face_reconstruct");
         std::cout << "Successfully imported face_reconstruct.py!" << std::endl;
+        
 
         py::list args;
         args.append("src/face_reconstruct.py"); // Emulate `python src/face_reconstruct.py`
@@ -146,6 +162,40 @@ void runPythonConstruct(const std::string& selectedFilePath) {
 
 int main()
 {
+    //testing------------------------------------------
+    /*HINSTANCE hDLL = LoadLibrary("progress_shared.dll");
+    if (!hDLL) {
+        std::cerr << "Failed to load DLL!" << std::endl;
+        return 1;
+    }
+
+    auto get_current = (get_progress_t)GetProcAddress(hDLL, "get_current_progress");
+    auto get_total = (get_progress_t)GetProcAddress(hDLL, "get_total_progress");
+
+    if (!get_current || !get_total) {
+        std::cerr << "Failed to get functions!" << std::endl;
+        return 1;
+    }
+
+    int cur = get_current();
+    int total = get_total();
+
+    std::cout << "[C++] Read progress: " << cur << " / " << total << std::endl;
+
+    
+
+    std::cout << "[C++] Waiting for Python to update progress..." << std::endl;
+    Sleep(6000); // Wait longer than Python sleep*/
+
+    //testing------------------------------------------
+
+    // Load the DLL once here
+    HMODULE dll = LoadLibraryW(L"progress_shared.dll");
+    if (!dll) return 1;
+
+    auto get_current = (GetProgressFunc)GetProcAddress(dll, "get_current_progress");
+    auto get_total = (GetProgressFunc)GetProcAddress(dll, "get_total_progress");
+
     std::string newPath = 
     "E:/anaconda3/envs/pytorch3d;" 
     "E:/anaconda3/envs/pytorch3d/Library/bin;" + 
@@ -155,6 +205,8 @@ int main()
     _putenv_s("PYTHONHOME", "E:/anaconda3/envs/pytorch3d");
     _putenv_s("PYTHONPATH", "E:/Project/DECA3/DECA/src");
     
+    int cur = get_current_progress();
+    int total = get_total_progress();
 
     try {
     
@@ -293,6 +345,7 @@ int main()
                                 std::cout << "Running in thread with file: " << capturedPath << std::endl;
                                 runPythonConstruct(capturedPath);
                                 std::cout << "Successfully constructed the face model.\n";
+                                std::cout << "All done!" << std::endl;
                             }
                 
                         } catch (const std::exception& e) {
@@ -300,13 +353,50 @@ int main()
                         } catch (...) {
                             std::cerr << "Unknown exception in Python thread!\n";
                         }
-                
+                        
                         pythonThreadRunning = false;
                         shouldRunPython = false;
                     });
                 
                     pythonThread.detach();
+
+                    // Start progress polling in a thread
+                    while (true) {
+                        {
+                            /*py::gil_scoped_acquire acquire;
+                            py::object face_module = py::module_::import("face_reconstruct");
+                            py::object progress = face_module.attr("get_progress")();
+                            int total = progress["total"].cast<int>();
+                            int done = progress["done"].cast<int>();
+                            std::cout << "Progress: " << done << "/" << total << "\n";*/
+
+                            //--getting variables from progress_module.hpp
+                            /*auto progress = get_global_progress(); // or similar
+                            
+                            int attempts = 50;
+                            while (!(progress = get_global_progress()) && attempts-- > 0) {
+                                //std::cout << "Waiting for progress...\n";
+                                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                            }
+                            if (!progress) {
+                                std::cout << "❌ Progress is still null after waiting!" << std::endl;
+                                break;
+                            }
+                            std::cout << "C++Progress: " << progress->get_current() << " / " << progress->get_total() << std::endl;*/
+
+                            //--getting shared variables from progress_shared.hpp
+
+                            cur = get_current_progress();
+                            total = get_total_progress();
+                            std::cout << "C++ Progress: " << cur << " / " << total << std::endl;
+                            if (!shouldRunPython) break;
+                        }
+                        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                    }
+                    
+
                 }
+                
                 
             }
 
@@ -330,7 +420,7 @@ int main()
 
         glfwDestroyWindow(window);
         glfwTerminate();
-
+        FreeLibrary(dll);
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Python initialization error: " << e.what() << std::endl;
@@ -381,10 +471,32 @@ void RenderFacialReconstructionTab()
                 {
                     if (ImGui::BeginTabItem("Facial Tracking"))
                     {
-                        ImGui::Text("Facial Tracking Content");
+                        static float phase = 0.0f;
+                        float speed = 1.5f;  // Controls how fast the bar moves
+                        float t = ImGui::GetTime();  // Elapsed time since app start
+                    
+                        // Simulate a bar moving left to right repeatedly
+                        phase = fmod(t * speed, 1.0f);  // Wrap around at 1.0f
+                    
+                        // Optional: fancy sweeping effect with triangle shape
+                        float sweep = fabs(phase - 0.5f) * 2.0f;  // creates a triangle wave from 0 to 1 and back
+                    
+                        // Label
+                        progressLabel = "Refreshing facial tracking data...";
+                    
+                        ImGui::Text("%s", progressLabel.c_str());
+                    
+                        // Custom green progress bar
+                        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.7f, 1.0f, 1.0f));  // blue-ish sweep
+                        ImGui::ProgressBar(sweep, ImVec2(0.0f, 0.0f));  // Full width
+                        ImGui::PopStyleColor();
+                    
                         ImGui::Image((ImTextureID)789, ImVec2(-1, -1)); // Placeholder image
+                    
                         ImGui::EndTabItem();
                     }
+                    
+                    
                     ImGui::EndTabBar();
                 }
             }

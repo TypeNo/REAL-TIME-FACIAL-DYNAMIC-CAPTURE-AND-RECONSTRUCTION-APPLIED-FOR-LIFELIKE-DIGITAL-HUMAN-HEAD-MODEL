@@ -22,7 +22,6 @@ E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft
 E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindOpenGL.cmake
 E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindPackageHandleStandardArgs.cmake
 E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindPackageMessage.cmake
-E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindPython.cmake
 E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindPython/Support.cmake
 E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindPython3.cmake
 E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake
@@ -45,10 +44,6 @@ E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/glfw3/glfw3ConfigVersion
 E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/glfw3/glfw3Targets-debug.cmake
 E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/glfw3/glfw3Targets-release.cmake
 E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/glfw3/glfw3Targets.cmake
-E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/imgui/imgui-config.cmake
-E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/imgui/imgui-targets-debug.cmake
-E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/imgui/imgui-targets-release.cmake
-E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/imgui/imgui-targets.cmake
 E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/pybind11/pybind11Common.cmake
 E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/pybind11/pybind11Config.cmake
 E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/share/pybind11/pybind11ConfigVersion.cmake

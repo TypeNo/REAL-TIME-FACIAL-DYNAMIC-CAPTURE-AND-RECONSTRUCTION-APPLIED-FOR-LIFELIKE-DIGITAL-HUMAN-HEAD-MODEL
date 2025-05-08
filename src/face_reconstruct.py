@@ -1,7 +1,15 @@
 import os, sys
+
+sys.path.append("E:/Project/DECA3/DECA/build/Release")
+import mybridge
+print(mybridge.__file__)
+#progress = mybridge.create_progress()
+#mybridge.set_global_progress(progress)
+
+
 import cv2
 import numpy as np
-from time import time
+import time
 from scipy.io import savemat
 import argparse
 from tqdm import tqdm
@@ -14,6 +22,46 @@ from decalib.datasets import datasets
 from decalib.utils import util
 from decalib.utils.config import cfg as deca_cfg
 from decalib.utils.tensor_cropper import transform_points
+import ctypes
+import os
+from ctypes import cdll
+# Load the DLL (ensure path is correct)
+dll_path = os.path.abspath("build/bin/Release/progress_shared.dll")
+progress = ctypes.CDLL(dll_path)
+dll = ctypes.WinDLL("progress_shared.dll")
+
+# Call update_progress
+progress.update_progress.argtypes = [ctypes.c_int, ctypes.c_int]
+progress.update_progress(7, 15)
+print("[Python] update_progress(7, 15) called")
+
+progress_lib = cdll.LoadLibrary("build/bin/Release/progress_shared.dll")
+progress_lib.update_progress.argtypes = [ctypes.c_int, ctypes.c_int]
+progress_lib.update_progress.restype = None
+
+progress_lib.get_current_progress.restype = ctypes.c_int
+progress_lib.get_total_progress.restype = ctypes.c_int
+
+# Wait for C++ app to check
+time.sleep(5)
+
+print("[Python] update_progress(7, 15) called")
+
+
+path_to_check = 'E:\\Project\\DECA3\\DECA\\build\\bin\\Release'
+is_in_path = path_to_check in sys.path
+
+print(f'Is {path_to_check} in the path: {is_in_path}')
+
+progress_status = {"total": 0, "done": 0}
+
+def set_progress(total, done):
+    global progress_status
+    progress_status["total"] = total
+    progress_status["done"] = done
+
+def get_progress():
+    return progress_status
 
 def main(args):
     print("face_reconstruct main() called with args:", args)
@@ -30,8 +78,19 @@ def main(args):
     deca_cfg.rasterizer_type = args.rasterizer_type
     deca_cfg.model.extract_tex = args.extractTex
     deca = DECA(config = deca_cfg, device=device)
-
+    
     for i in tqdm(range(len(testdata))):
+        set_progress(len(testdata), i)
+        try:
+            print(f"Updating progress: {i} / {len(testdata)}")
+            #progress = mybridge.create_progress()
+            #progress.update(i, len(testdata))
+            mybridge.update_progress(i, len(testdata))
+            progress_lib.update_progress(i, len(testdata))
+            dll.update_progress(i, len(testdata))
+        except Exception as e:
+            print(f"Error updating progress: {e}")
+        print(f"Python Progress: {progress_status['done']} / {progress_status['total']}")
         inputname = testdata[i]['imageinputname']
         name = testdata[i]['imagename']
         images = testdata[i]['image'].to(device)[None,...]   
@@ -104,7 +163,16 @@ def main(args):
                     if args.render_orig:
                         orig_image = util.tensor2image(orig_visdict[vis_name][0])
                         cv2.imwrite(os.path.join(vis_folder, f'orig_{name}_{vis_name}.jpg'), orig_image)
-        print(f'-- please check the results in {savefolder}')
+        set_progress(len(testdata), i+1)
+        print(f"Python Progress: {progress_status['done']} / {progress_status['total']}")
+        #progress.update(i+1, len(testdata)) 
+        mybridge.update_progress(i+1, len(testdata))
+        progress_lib.update_progress(i+1, len(testdata))
+        dll.update_progress(i+1, len(testdata))
+
+    print(f'-- please check the results in {savefolder}')
+        
+
 
 if __name__ == '__main__':
     try:

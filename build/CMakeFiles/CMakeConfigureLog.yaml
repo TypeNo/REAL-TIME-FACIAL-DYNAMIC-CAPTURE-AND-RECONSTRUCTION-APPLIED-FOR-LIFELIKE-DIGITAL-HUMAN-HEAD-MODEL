@@ -5,7 +5,7 @@ events:
     kind: "message-v1"
     backtrace:
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:233 (message)"
-      - "CMakeLists.txt:4 (project)"
+      - "CMakeLists.txt:3 (project)"
     message: |
       The system is: Windows - 10.0.19045 - AMD64
   -
@@ -14,7 +14,7 @@ events:
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:4 (project)"
+      - "CMakeLists.txt:3 (project)"
     message: |
       Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
       Compiler:  
@@ -24,7 +24,7 @@ events:
       The output was:
       0
       MSBuild version 17.10.4+10fbfbf2e for .NET Framework
-      Build started 4/27/2025 5:38:34 PM.
+      Build started 5/8/2025 1:12:20 PM.
       
       Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\3.28.3-msvc11\\CompilerIdC\\CompilerIdC.vcxproj" on node 1 (default targets).
       PrepareForBuild:
@@ -55,7 +55,7 @@ events:
           0 Warning(s)
           0 Error(s)
       
-      Time Elapsed 00:00:01.47
+      Time Elapsed 00:00:00.92
       
       
       Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.exe"
@@ -71,7 +71,7 @@ events:
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
-      - "CMakeLists.txt:4 (project)"
+      - "CMakeLists.txt:3 (project)"
     message: |
       Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
       Compiler:  
@@ -81,7 +81,7 @@ events:
       The output was:
       0
       MSBuild version 17.10.4+10fbfbf2e for .NET Framework
-      Build started 4/27/2025 5:38:35 PM.
+      Build started 5/8/2025 1:12:21 PM.
       
       Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\3.28.3-msvc11\\CompilerIdCXX\\CompilerIdCXX.vcxproj" on node 1 (default targets).
       PrepareForBuild:
@@ -112,7 +112,7 @@ events:
           0 Warning(s)
           0 Error(s)
       
-      Time Elapsed 00:00:00.74
+      Time Elapsed 00:00:00.80
       
       
       Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
@@ -127,12 +127,12 @@ events:
     backtrace:
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:4 (project)"
+      - "CMakeLists.txt:3 (project)"
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-4fa726"
-      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-4fa726"
+      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-llu3cm"
+      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-llu3cm"
     cmakeVariables:
       CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
       CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
@@ -141,42 +141,42 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-4fa726'
+        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-llu3cm'
         
-        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_9ae2f.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_00c86.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
         MSBuild version 17.10.4+10fbfbf2e for .NET Framework
-        Build started 4/27/2025 5:38:36 PM.
+        Build started 5/8/2025 1:12:23 PM.
         
-        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-4fa726\\cmTC_9ae2f.vcxproj" on node 1 (default targets).
+        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-llu3cm\\cmTC_00c86.vcxproj" on node 1 (default targets).
         PrepareForBuild:
-          Creating directory "cmTC_9ae2f.dir\\Debug\\".
+          Creating directory "cmTC_00c86.dir\\Debug\\".
           Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
-          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-4fa726\\Debug\\".
-          Creating directory "cmTC_9ae2f.dir\\Debug\\cmTC_9ae2f.tlog\\".
+          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-llu3cm\\Debug\\".
+          Creating directory "cmTC_00c86.dir\\Debug\\cmTC_00c86.tlog\\".
         InitializeBuildStatus:
-          Creating "cmTC_9ae2f.dir\\Debug\\cmTC_9ae2f.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
-          Touching "cmTC_9ae2f.dir\\Debug\\cmTC_9ae2f.tlog\\unsuccessfulbuild".
+          Creating "cmTC_00c86.dir\\Debug\\cmTC_00c86.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_00c86.dir\\Debug\\cmTC_00c86.tlog\\unsuccessfulbuild".
         VcpkgCheckManifestRoot:
           The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
         ClCompile:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_9ae2f.dir\\Debug\\\\" /Fd"cmTC_9ae2f.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCCompilerABI.c"
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_00c86.dir\\Debug\\\\" /Fd"cmTC_00c86.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCCompilerABI.c"
           Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
           Copyright (C) Microsoft Corporation.  All rights reserved.
-          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_9ae2f.dir\\Debug\\\\" /Fd"cmTC_9ae2f.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCCompilerABI.c"
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_00c86.dir\\Debug\\\\" /Fd"cmTC_00c86.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCCompilerABI.c"
           CMakeCCompilerABI.c
         Link:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-4fa726\\Debug\\cmTC_9ae2f.exe" /INCREMENTAL /ILK:"cmTC_9ae2f.dir\\Debug\\cmTC_9ae2f.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-4fa726/Debug/cmTC_9ae2f.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-4fa726/Debug/cmTC_9ae2f.lib" /MACHINE:X64  /machine:x64 cmTC_9ae2f.dir\\Debug\\CMakeCCompilerABI.obj
-          cmTC_9ae2f.vcxproj -> E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-4fa726\\Debug\\cmTC_9ae2f.exe
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-llu3cm\\Debug\\cmTC_00c86.exe" /INCREMENTAL /ILK:"cmTC_00c86.dir\\Debug\\cmTC_00c86.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-llu3cm/Debug/cmTC_00c86.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-llu3cm/Debug/cmTC_00c86.lib" /MACHINE:X64  /machine:x64 cmTC_00c86.dir\\Debug\\CMakeCCompilerABI.obj
+          cmTC_00c86.vcxproj -> E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-llu3cm\\Debug\\cmTC_00c86.exe
         FinalizeBuildStatus:
-          Deleting file "cmTC_9ae2f.dir\\Debug\\cmTC_9ae2f.tlog\\unsuccessfulbuild".
-          Touching "cmTC_9ae2f.dir\\Debug\\cmTC_9ae2f.tlog\\cmTC_9ae2f.lastbuildstate".
-        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-4fa726\\cmTC_9ae2f.vcxproj" (default targets).
+          Deleting file "cmTC_00c86.dir\\Debug\\cmTC_00c86.tlog\\unsuccessfulbuild".
+          Touching "cmTC_00c86.dir\\Debug\\cmTC_00c86.tlog\\cmTC_00c86.lastbuildstate".
+        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-llu3cm\\cmTC_00c86.vcxproj" (default targets).
         
         Build succeeded.
             0 Warning(s)
             0 Error(s)
         
-        Time Elapsed 00:00:00.85
+        Time Elapsed 00:00:01.52
         
       exitCode: 0
   -
@@ -184,12 +184,12 @@ events:
     backtrace:
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
       - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
-      - "CMakeLists.txt:4 (project)"
+      - "CMakeLists.txt:3 (project)"
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-kfxqfq"
-      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-kfxqfq"
+      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-v4bbhy"
+      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-v4bbhy"
     cmakeVariables:
       CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
       CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
@@ -198,237 +198,44 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-kfxqfq'
+        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-v4bbhy'
         
-        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_43f27.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_9df32.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
         MSBuild version 17.10.4+10fbfbf2e for .NET Framework
-        Build started 4/27/2025 5:38:38 PM.
+        Build started 5/8/2025 1:12:25 PM.
         
-        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kfxqfq\\cmTC_43f27.vcxproj" on node 1 (default targets).
+        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4bbhy\\cmTC_9df32.vcxproj" on node 1 (default targets).
         PrepareForBuild:
-          Creating directory "cmTC_43f27.dir\\Debug\\".
+          Creating directory "cmTC_9df32.dir\\Debug\\".
           Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
-          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kfxqfq\\Debug\\".
-          Creating directory "cmTC_43f27.dir\\Debug\\cmTC_43f27.tlog\\".
+          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4bbhy\\Debug\\".
+          Creating directory "cmTC_9df32.dir\\Debug\\cmTC_9df32.tlog\\".
         InitializeBuildStatus:
-          Creating "cmTC_43f27.dir\\Debug\\cmTC_43f27.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
-          Touching "cmTC_43f27.dir\\Debug\\cmTC_43f27.tlog\\unsuccessfulbuild".
+          Creating "cmTC_9df32.dir\\Debug\\cmTC_9df32.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_9df32.dir\\Debug\\cmTC_9df32.tlog\\unsuccessfulbuild".
         VcpkgCheckManifestRoot:
           The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
         ClCompile:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_43f27.dir\\Debug\\\\" /Fd"cmTC_43f27.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "E:\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCXXCompilerABI.cpp"
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_9df32.dir\\Debug\\\\" /Fd"cmTC_9df32.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "E:\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCXXCompilerABI.cpp"
           Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
           Copyright (C) Microsoft Corporation.  All rights reserved.
-          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_43f27.dir\\Debug\\\\" /Fd"cmTC_43f27.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "E:\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCXXCompilerABI.cpp"
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_9df32.dir\\Debug\\\\" /Fd"cmTC_9df32.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "E:\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCXXCompilerABI.cpp"
           CMakeCXXCompilerABI.cpp
         Link:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kfxqfq\\Debug\\cmTC_43f27.exe" /INCREMENTAL /ILK:"cmTC_43f27.dir\\Debug\\cmTC_43f27.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-kfxqfq/Debug/cmTC_43f27.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-kfxqfq/Debug/cmTC_43f27.lib" /MACHINE:X64  /machine:x64 cmTC_43f27.dir\\Debug\\CMakeCXXCompilerABI.obj
-          cmTC_43f27.vcxproj -> E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kfxqfq\\Debug\\cmTC_43f27.exe
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4bbhy\\Debug\\cmTC_9df32.exe" /INCREMENTAL /ILK:"cmTC_9df32.dir\\Debug\\cmTC_9df32.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-v4bbhy/Debug/cmTC_9df32.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-v4bbhy/Debug/cmTC_9df32.lib" /MACHINE:X64  /machine:x64 cmTC_9df32.dir\\Debug\\CMakeCXXCompilerABI.obj
+          cmTC_9df32.vcxproj -> E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4bbhy\\Debug\\cmTC_9df32.exe
         FinalizeBuildStatus:
-          Deleting file "cmTC_43f27.dir\\Debug\\cmTC_43f27.tlog\\unsuccessfulbuild".
-          Touching "cmTC_43f27.dir\\Debug\\cmTC_43f27.tlog\\cmTC_43f27.lastbuildstate".
-        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kfxqfq\\cmTC_43f27.vcxproj" (default targets).
+          Deleting file "cmTC_9df32.dir\\Debug\\cmTC_9df32.tlog\\unsuccessfulbuild".
+          Touching "cmTC_9df32.dir\\Debug\\cmTC_9df32.tlog\\cmTC_9df32.lastbuildstate".
+        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-v4bbhy\\cmTC_9df32.vcxproj" (default targets).
         
         Build succeeded.
             0 Warning(s)
             0 Error(s)
         
-        Time Elapsed 00:00:00.81
+        Time Elapsed 00:00:01.07
         
       exitCode: 0
-...
-
----
-events:
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CheckCSourceCompiles.cmake:52 (cmake_check_source_compiles)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:163 (_threads_check_libc)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
-      - "vcpkg_installed/x64-windows/share/glfw3/glfw3Config.cmake:2 (find_dependency)"
-      - "CMakeLists.txt:55 (find_package)"
-    checks:
-      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
-    directories:
-      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-7cud8i"
-      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-7cud8i"
-    cmakeVariables:
-      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
-      CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
-      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
-    buildResult:
-      variable: "CMAKE_HAVE_LIBC_PTHREAD"
-      cached: true
-      stdout: |
-        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-7cud8i'
-        
-        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_ba3f5.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
-        MSBuild version 17.10.4+10fbfbf2e for .NET Framework
-        Build started 4/28/2025 9:57:01 PM.
-        
-        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\cmTC_ba3f5.vcxproj" on node 1 (default targets).
-        PrepareForBuild:
-          Creating directory "cmTC_ba3f5.dir\\Debug\\".
-          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
-          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\Debug\\".
-          Creating directory "cmTC_ba3f5.dir\\Debug\\cmTC_ba3f5.tlog\\".
-        InitializeBuildStatus:
-          Creating "cmTC_ba3f5.dir\\Debug\\cmTC_ba3f5.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
-          Touching "cmTC_ba3f5.dir\\Debug\\cmTC_ba3f5.tlog\\unsuccessfulbuild".
-        VcpkgCheckManifestRoot:
-          The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
-        ClCompile:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_ba3f5.dir\\Debug\\\\" /Fd"cmTC_ba3f5.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\src.c"
-          Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
-          Copyright (C) Microsoft Corporation.  All rights reserved.
-          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_ba3f5.dir\\Debug\\\\" /Fd"cmTC_ba3f5.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\src.c"
-          src.c
-        E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\src.c(1,10): error C1083: Cannot open include file: 'pthread.h': No such file or directory [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\cmTC_ba3f5.vcxproj]
-        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\cmTC_ba3f5.vcxproj" (default targets) -- FAILED.
-        
-        Build FAILED.
-        
-        "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\cmTC_ba3f5.vcxproj" (default target) (1) ->
-        (ClCompile target) -> 
-          E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\src.c(1,10): error C1083: Cannot open include file: 'pthread.h': No such file or directory [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-7cud8i\\cmTC_ba3f5.vcxproj]
-        
-            0 Warning(s)
-            1 Error(s)
-        
-        Time Elapsed 00:00:00.87
-        
-      exitCode: 1
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:175 (_threads_check_lib)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
-      - "vcpkg_installed/x64-windows/share/glfw3/glfw3Config.cmake:2 (find_dependency)"
-      - "CMakeLists.txt:55 (find_package)"
-    checks:
-      - "Looking for pthread_create in pthreads"
-    directories:
-      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-ajeuzs"
-      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-ajeuzs"
-    cmakeVariables:
-      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
-      CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
-      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
-    buildResult:
-      variable: "CMAKE_HAVE_PTHREADS_CREATE"
-      cached: true
-      stdout: |
-        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-ajeuzs'
-        
-        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_9ec4c.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
-        MSBuild version 17.10.4+10fbfbf2e for .NET Framework
-        Build started 4/28/2025 9:57:02 PM.
-        
-        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\cmTC_9ec4c.vcxproj" on node 1 (default targets).
-        PrepareForBuild:
-          Creating directory "cmTC_9ec4c.dir\\Debug\\".
-          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
-          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\Debug\\".
-          Creating directory "cmTC_9ec4c.dir\\Debug\\cmTC_9ec4c.tlog\\".
-        InitializeBuildStatus:
-          Creating "cmTC_9ec4c.dir\\Debug\\cmTC_9ec4c.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
-          Touching "cmTC_9ec4c.dir\\Debug\\cmTC_9ec4c.tlog\\unsuccessfulbuild".
-        VcpkgCheckManifestRoot:
-          The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
-        ClCompile:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_9ec4c.dir\\Debug\\\\" /Fd"cmTC_9ec4c.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\CheckFunctionExists.c"
-          Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
-          Copyright (C) Microsoft Corporation.  All rights reserved.
-          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_9ec4c.dir\\Debug\\\\" /Fd"cmTC_9ec4c.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\CheckFunctionExists.c"
-          CheckFunctionExists.c
-        Link:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\Debug\\cmTC_9ec4c.exe" /INCREMENTAL /ILK:"cmTC_9ec4c.dir\\Debug\\cmTC_9ec4c.ilk" /NOLOGO pthreads.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-ajeuzs/Debug/cmTC_9ec4c.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-ajeuzs/Debug/cmTC_9ec4c.lib" /MACHINE:X64  /machine:x64 cmTC_9ec4c.dir\\Debug\\CheckFunctionExists.obj
-        LINK : fatal error LNK1104: cannot open file 'pthreads.lib' [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\cmTC_9ec4c.vcxproj]
-        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\cmTC_9ec4c.vcxproj" (default targets) -- FAILED.
-        
-        Build FAILED.
-        
-        "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\cmTC_9ec4c.vcxproj" (default target) (1) ->
-        (Link target) -> 
-          LINK : fatal error LNK1104: cannot open file 'pthreads.lib' [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-ajeuzs\\cmTC_9ec4c.vcxproj]
-        
-            0 Warning(s)
-            1 Error(s)
-        
-        Time Elapsed 00:00:00.67
-        
-      exitCode: 1
-  -
-    kind: "try_compile-v1"
-    backtrace:
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:176 (_threads_check_lib)"
-      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
-      - "vcpkg_installed/x64-windows/share/glfw3/glfw3Config.cmake:2 (find_dependency)"
-      - "CMakeLists.txt:55 (find_package)"
-    checks:
-      - "Looking for pthread_create in pthread"
-    directories:
-      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-gcxqx1"
-      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-gcxqx1"
-    cmakeVariables:
-      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
-      CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
-      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
-    buildResult:
-      variable: "CMAKE_HAVE_PTHREAD_CREATE"
-      cached: true
-      stdout: |
-        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-gcxqx1'
-        
-        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_a3524.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
-        MSBuild version 17.10.4+10fbfbf2e for .NET Framework
-        Build started 4/28/2025 9:57:03 PM.
-        
-        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\cmTC_a3524.vcxproj" on node 1 (default targets).
-        PrepareForBuild:
-          Creating directory "cmTC_a3524.dir\\Debug\\".
-          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
-          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\Debug\\".
-          Creating directory "cmTC_a3524.dir\\Debug\\cmTC_a3524.tlog\\".
-        InitializeBuildStatus:
-          Creating "cmTC_a3524.dir\\Debug\\cmTC_a3524.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
-          Touching "cmTC_a3524.dir\\Debug\\cmTC_a3524.tlog\\unsuccessfulbuild".
-        VcpkgCheckManifestRoot:
-          The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
-        ClCompile:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_a3524.dir\\Debug\\\\" /Fd"cmTC_a3524.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\CheckFunctionExists.c"
-          Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
-          Copyright (C) Microsoft Corporation.  All rights reserved.
-          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_a3524.dir\\Debug\\\\" /Fd"cmTC_a3524.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\CheckFunctionExists.c"
-          CheckFunctionExists.c
-        Link:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\Debug\\cmTC_a3524.exe" /INCREMENTAL /ILK:"cmTC_a3524.dir\\Debug\\cmTC_a3524.ilk" /NOLOGO pthread.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-gcxqx1/Debug/cmTC_a3524.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-gcxqx1/Debug/cmTC_a3524.lib" /MACHINE:X64  /machine:x64 cmTC_a3524.dir\\Debug\\CheckFunctionExists.obj
-        LINK : fatal error LNK1104: cannot open file 'pthread.lib' [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\cmTC_a3524.vcxproj]
-        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\cmTC_a3524.vcxproj" (default targets) -- FAILED.
-        
-        Build FAILED.
-        
-        "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\cmTC_a3524.vcxproj" (default target) (1) ->
-        (Link target) -> 
-          LINK : fatal error LNK1104: cannot open file 'pthread.lib' [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-gcxqx1\\cmTC_a3524.vcxproj]
-        
-            0 Warning(s)
-            1 Error(s)
-        
-        Time Elapsed 00:00:00.58
-        
-      exitCode: 1
-...
-
----
-events:
   -
     kind: "try_compile-v1"
     backtrace:
@@ -439,65 +246,249 @@ events:
       - "vcpkg_installed/x64-windows/share/pybind11/pybind11Common.cmake:340 (_pybind11_return_if_cxx_and_linker_flags_work)"
       - "vcpkg_installed/x64-windows/share/pybind11/pybind11Common.cmake:385 (_pybind11_generate_lto)"
       - "vcpkg_installed/x64-windows/share/pybind11/pybind11Config.cmake:250 (include)"
-      - "CMakeLists.txt:74 (find_package)"
+      - "CMakeLists.txt:26 (find_package)"
     checks:
       - "Performing Test HAS_MSVC_GL_LTCG"
     directories:
-      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-edul4r"
-      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-edul4r"
+      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-i7txo7"
+      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-i7txo7"
     cmakeVariables:
       CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /GR /EHsc"
       CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
       CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
-      CMAKE_MODULE_PATH: ""
     buildResult:
       variable: "HAS_MSVC_GL_LTCG"
       cached: true
       stdout: |
-        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-edul4r'
+        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-i7txo7'
         
-        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_36ff7.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_d6f49.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
         MSBuild version 17.10.4+10fbfbf2e for .NET Framework
-        Build started 4/30/2025 11:54:37 PM.
+        Build started 5/8/2025 1:12:27 PM.
         
-        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\cmTC_36ff7.vcxproj" on node 1 (default targets).
+        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\cmTC_d6f49.vcxproj" on node 1 (default targets).
         PrepareForBuild:
-          Creating directory "cmTC_36ff7.dir\\Debug\\".
+          Creating directory "cmTC_d6f49.dir\\Debug\\".
           Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
-          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\Debug\\".
-          Creating directory "cmTC_36ff7.dir\\Debug\\cmTC_36ff7.tlog\\".
+          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\Debug\\".
+          Creating directory "cmTC_d6f49.dir\\Debug\\cmTC_d6f49.tlog\\".
         InitializeBuildStatus:
-          Creating "cmTC_36ff7.dir\\Debug\\cmTC_36ff7.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
-          Touching "cmTC_36ff7.dir\\Debug\\cmTC_36ff7.tlog\\unsuccessfulbuild".
+          Creating "cmTC_d6f49.dir\\Debug\\cmTC_d6f49.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_d6f49.dir\\Debug\\cmTC_d6f49.tlog\\unsuccessfulbuild".
         VcpkgCheckManifestRoot:
           The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
         ClCompile:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D HAS_MSVC_GL_LTCG /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /std:c++17 /Fo"cmTC_36ff7.dir\\Debug\\\\" /Fd"cmTC_36ff7.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\src.cxx"
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D HAS_MSVC_GL_LTCG /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /std:c++17 /Fo"cmTC_d6f49.dir\\Debug\\\\" /Fd"cmTC_d6f49.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\src.cxx"
           Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
           Copyright (C) Microsoft Corporation.  All rights reserved.
-          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D HAS_MSVC_GL_LTCG /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /std:c++17 /Fo"cmTC_36ff7.dir\\Debug\\\\" /Fd"cmTC_36ff7.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\src.cxx"
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /GL /D _MBCS /D WIN32 /D _WINDOWS /D HAS_MSVC_GL_LTCG /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /std:c++17 /Fo"cmTC_d6f49.dir\\Debug\\\\" /Fd"cmTC_d6f49.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TP /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\src.cxx"
           src.cxx
         Link:
-          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\Debug\\cmTC_36ff7.exe" /INCREMENTAL /ILK:"cmTC_36ff7.dir\\Debug\\cmTC_36ff7.ilk" /NOLOGO "-LTCG" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-edul4r/Debug/cmTC_36ff7.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-edul4r/Debug/cmTC_36ff7.lib" /MACHINE:X64  /machine:x64 cmTC_36ff7.dir\\Debug\\src.obj
-        LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\cmTC_36ff7.vcxproj]
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\Debug\\cmTC_d6f49.exe" /INCREMENTAL /ILK:"cmTC_d6f49.dir\\Debug\\cmTC_d6f49.ilk" /NOLOGO "-LTCG" kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-i7txo7/Debug/cmTC_d6f49.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-i7txo7/Debug/cmTC_d6f49.lib" /MACHINE:X64  /machine:x64 cmTC_d6f49.dir\\Debug\\src.obj
+        LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\cmTC_d6f49.vcxproj]
           Generating code
           Finished generating code
-          cmTC_36ff7.vcxproj -> E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\Debug\\cmTC_36ff7.exe
+          cmTC_d6f49.vcxproj -> E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\Debug\\cmTC_d6f49.exe
         FinalizeBuildStatus:
-          Deleting file "cmTC_36ff7.dir\\Debug\\cmTC_36ff7.tlog\\unsuccessfulbuild".
-          Touching "cmTC_36ff7.dir\\Debug\\cmTC_36ff7.tlog\\cmTC_36ff7.lastbuildstate".
-        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\cmTC_36ff7.vcxproj" (default targets).
+          Deleting file "cmTC_d6f49.dir\\Debug\\cmTC_d6f49.tlog\\unsuccessfulbuild".
+          Touching "cmTC_d6f49.dir\\Debug\\cmTC_d6f49.tlog\\cmTC_d6f49.lastbuildstate".
+        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\cmTC_d6f49.vcxproj" (default targets).
         
         Build succeeded.
         
-        "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\cmTC_36ff7.vcxproj" (default target) (1) ->
+        "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\cmTC_d6f49.vcxproj" (default target) (1) ->
         (Link target) -> 
-          LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-edul4r\\cmTC_36ff7.vcxproj]
+          LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-i7txo7\\cmTC_d6f49.vcxproj]
         
             1 Warning(s)
             0 Error(s)
         
-        Time Elapsed 00:00:03.22
+        Time Elapsed 00:00:00.82
         
       exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CheckCSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "vcpkg_installed/x64-windows/share/glfw3/glfw3Config.cmake:2 (find_dependency)"
+      - "CMakeLists.txt:78 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-kg6o07"
+      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-kg6o07"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-kg6o07'
+        
+        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_d8625.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.10.4+10fbfbf2e for .NET Framework
+        Build started 5/8/2025 1:12:28 PM.
+        
+        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\cmTC_d8625.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_d8625.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\Debug\\".
+          Creating directory "cmTC_d8625.dir\\Debug\\cmTC_d8625.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_d8625.dir\\Debug\\cmTC_d8625.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_d8625.dir\\Debug\\cmTC_d8625.tlog\\unsuccessfulbuild".
+        VcpkgCheckManifestRoot:
+          The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+        ClCompile:
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_d8625.dir\\Debug\\\\" /Fd"cmTC_d8625.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\src.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_d8625.dir\\Debug\\\\" /Fd"cmTC_d8625.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\src.c"
+          src.c
+        E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\src.c(1,10): error C1083: Cannot open include file: 'pthread.h': No such file or directory [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\cmTC_d8625.vcxproj]
+        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\cmTC_d8625.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\cmTC_d8625.vcxproj" (default target) (1) ->
+        (ClCompile target) -> 
+          E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\src.c(1,10): error C1083: Cannot open include file: 'pthread.h': No such file or directory [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-kg6o07\\cmTC_d8625.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.45
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:175 (_threads_check_lib)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "vcpkg_installed/x64-windows/share/glfw3/glfw3Config.cmake:2 (find_dependency)"
+      - "CMakeLists.txt:78 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthreads"
+    directories:
+      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-acqalr"
+      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-acqalr"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREADS_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-acqalr'
+        
+        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_f0ee1.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.10.4+10fbfbf2e for .NET Framework
+        Build started 5/8/2025 1:12:29 PM.
+        
+        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\cmTC_f0ee1.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_f0ee1.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\Debug\\".
+          Creating directory "cmTC_f0ee1.dir\\Debug\\cmTC_f0ee1.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_f0ee1.dir\\Debug\\cmTC_f0ee1.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_f0ee1.dir\\Debug\\cmTC_f0ee1.tlog\\unsuccessfulbuild".
+        VcpkgCheckManifestRoot:
+          The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+        ClCompile:
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f0ee1.dir\\Debug\\\\" /Fd"cmTC_f0ee1.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\CheckFunctionExists.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f0ee1.dir\\Debug\\\\" /Fd"cmTC_f0ee1.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\CheckFunctionExists.c"
+          CheckFunctionExists.c
+        Link:
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\Debug\\cmTC_f0ee1.exe" /INCREMENTAL /ILK:"cmTC_f0ee1.dir\\Debug\\cmTC_f0ee1.ilk" /NOLOGO pthreads.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-acqalr/Debug/cmTC_f0ee1.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-acqalr/Debug/cmTC_f0ee1.lib" /MACHINE:X64  /machine:x64 cmTC_f0ee1.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: cannot open file 'pthreads.lib' [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\cmTC_f0ee1.vcxproj]
+        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\cmTC_f0ee1.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\cmTC_f0ee1.vcxproj" (default target) (1) ->
+        (Link target) -> 
+          LINK : fatal error LNK1104: cannot open file 'pthreads.lib' [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-acqalr\\cmTC_f0ee1.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.59
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/FindThreads.cmake:176 (_threads_check_lib)"
+      - "E:/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "vcpkg_installed/x64-windows/share/glfw3/glfw3Config.cmake:2 (find_dependency)"
+      - "CMakeLists.txt:78 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthread"
+    directories:
+      source: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-xd12ig"
+      binary: "E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-xd12ig"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS"
+      CMAKE_C_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREAD_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-xd12ig'
+        
+        Run Build Command(s): "E:/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_70768.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.10.4+10fbfbf2e for .NET Framework
+        Build started 5/8/2025 1:12:30 PM.
+        
+        Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\cmTC_70768.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_70768.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\Debug\\".
+          Creating directory "cmTC_70768.dir\\Debug\\cmTC_70768.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_70768.dir\\Debug\\cmTC_70768.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_70768.dir\\Debug\\cmTC_70768.tlog\\unsuccessfulbuild".
+        VcpkgCheckManifestRoot:
+          The vcpkg manifest was disabled, but we found a manifest file in E:\\Project\\DECA3\\DECA\\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+        ClCompile:
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_70768.dir\\Debug\\\\" /Fd"cmTC_70768.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\CheckFunctionExists.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.40.33813 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_70768.dir\\Debug\\\\" /Fd"cmTC_70768.dir\\Debug\\vc143.pdb" /external:W1 /Gd /TC /errorReport:queue "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\CheckFunctionExists.c"
+          CheckFunctionExists.c
+        Link:
+          E:\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\Debug\\cmTC_70768.exe" /INCREMENTAL /ILK:"cmTC_70768.dir\\Debug\\cmTC_70768.ilk" /NOLOGO pthread.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-xd12ig/Debug/cmTC_70768.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Project/DECA3/DECA/build/CMakeFiles/CMakeScratch/TryCompile-xd12ig/Debug/cmTC_70768.lib" /MACHINE:X64  /machine:x64 cmTC_70768.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: cannot open file 'pthread.lib' [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\cmTC_70768.vcxproj]
+        Done Building Project "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\cmTC_70768.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\cmTC_70768.vcxproj" (default target) (1) ->
+        (Link target) -> 
+          LINK : fatal error LNK1104: cannot open file 'pthread.lib' [E:\\Project\\DECA3\\DECA\\build\\CMakeFiles\\CMakeScratch\\TryCompile-xd12ig\\cmTC_70768.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.55
+        
+      exitCode: 1
 ...
