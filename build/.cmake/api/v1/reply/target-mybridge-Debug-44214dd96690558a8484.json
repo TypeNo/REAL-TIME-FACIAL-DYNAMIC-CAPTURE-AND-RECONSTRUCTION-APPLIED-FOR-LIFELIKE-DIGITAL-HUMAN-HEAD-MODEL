@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "MinSizeRel/mybridge.cp311-win_amd64.pyd"
+			"path" : "Debug/mybridge.cp311-win_amd64.pyd"
 		},
 		{
-			"path" : "MinSizeRel/mybridge.pdb"
+			"path" : "Debug/mybridge.pdb"
 		}
 	],
 	"backtrace" : 4,
@@ -17,8 +17,8 @@
 			"__Python3_add_library",
 			"python3_add_library",
 			"pybind11_add_module",
-			"target_link_libraries",
 			"link_directories",
+			"target_link_libraries",
 			"include_directories"
 		],
 		"files" : 
@@ -59,32 +59,32 @@
 			},
 			{
 				"command" : 4,
-				"file" : 2,
-				"line" : 232,
-				"parent" : 1
-			},
-			{
-				"command" : 5,
 				"file" : 3,
 				"line" : 22,
 				"parent" : 0
 			},
 			{
-				"command" : 4,
+				"command" : 5,
 				"file" : 3,
 				"line" : 77,
 				"parent" : 0
 			},
 			{
-				"command" : 4,
+				"command" : 5,
 				"file" : 0,
 				"line" : 4087,
 				"parent" : 3
 			},
 			{
-				"command" : 4,
+				"command" : 5,
 				"file" : 2,
 				"line" : 203,
+				"parent" : 1
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 194,
 				"parent" : 1
 			},
 			{
@@ -92,12 +92,6 @@
 				"file" : 3,
 				"line" : 21,
 				"parent" : 0
-			},
-			{
-				"command" : 4,
-				"file" : 2,
-				"line" : 194,
-				"parent" : 1
 			}
 		]
 	},
@@ -107,23 +101,19 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /O1 /Ob1 /DNDEBUG -std:c++17 -MD"
+					"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 -std:c++17 -MDd"
 				},
 				{
-					"backtrace" : 9,
+					"backtrace" : 8,
 					"fragment" : "/bigobj"
-				},
-				{
-					"backtrace" : 9,
-					"fragment" : "/MP"
-				},
-				{
-					"backtrace" : 5,
-					"fragment" : "/GL"
 				}
 			],
 			"defines" : 
 			[
+				{
+					"backtrace" : 9,
+					"define" : "Py_DEBUG"
+				},
 				{
 					"define" : "mybridge_EXPORTS"
 				}
@@ -131,7 +121,7 @@
 			"includes" : 
 			[
 				{
-					"backtrace" : 7,
+					"backtrace" : 6,
 					"path" : "E:/Project/DECA3/DECA/src"
 				},
 				{
@@ -140,7 +130,7 @@
 					"path" : "E:/anaconda3/envs/pytorch3d/include"
 				},
 				{
-					"backtrace" : 11,
+					"backtrace" : 9,
 					"isSystem" : true,
 					"path" : "E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/include"
 				}
@@ -150,9 +140,9 @@
 			{
 				"backtraces" : 
 				[
-					11,
-					11,
-					11
+					9,
+					9,
+					9
 				],
 				"standard" : "17"
 			},
@@ -165,11 +155,11 @@
 	"dependencies" : 
 	[
 		{
-			"backtrace" : 7,
-			"id" : "progress_shared::@6890427a1f51a3e7e1df"
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
 		},
 		{
-			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+			"backtrace" : 6,
+			"id" : "progress_shared::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "mybridge::@6890427a1f51a3e7e1df",
@@ -178,26 +168,21 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "/machine:x64 /INCREMENTAL:NO",
+				"fragment" : "/machine:x64 /debug /INCREMENTAL",
 				"role" : "flags"
 			},
 			{
 				"backtrace" : 5,
-				"fragment" : "-LTCG",
-				"role" : "flags"
-			},
-			{
-				"backtrace" : 6,
 				"fragment" : "-LIBPATH:E:\\anaconda3\\envs\\pytorch3d\\libs",
 				"role" : "libraryPath"
 			},
 			{
-				"backtrace" : 7,
-				"fragment" : "MinSizeRel\\progress_shared.lib",
+				"backtrace" : 6,
+				"fragment" : "Debug\\progress_shared.lib",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 8,
+				"backtrace" : 7,
 				"fragment" : "E:\\anaconda3\\envs\\pytorch3d\\libs\\python311.lib",
 				"role" : "libraries"
 			},

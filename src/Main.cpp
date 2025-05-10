@@ -27,6 +27,8 @@ using namespace std::chrono_literals;
 #include <cmath> // For sin() and M_PI
 #include "progress_shared.hpp"
 #include <windows.h>
+#include <algorithm>  // for std::clamp
+
 
 typedef void (__cdecl *update_progress_t)(int, int);
 typedef int (__cdecl *get_progress_t)();
@@ -37,13 +39,14 @@ std::thread pythonThread;
 std::atomic<bool> shouldRunPython(false);
 std::string pendingPythonPath;
 bool pythonThreadRunning = false;
+
 // Global variables for progress
-float currentProgress = 0.0f; // normalized: 0.0 - 1.0
-float Total= 0.0f;
+int cur = get_current_progress();
+int previous_cur = cur;
+int total = get_total_progress();
 std::string progressLabel = "Waiting...";
 
-
-
+//Default Input Dir
 std::string GetDesktopPath() {
     #ifdef _WIN32
         const char* userProfile = std::getenv("USERPROFILE");
@@ -57,48 +60,533 @@ std::string GetDesktopPath() {
         return "."; // fallback to current directory
     }
 
+//Application Dark Theme Setup
 void EnableDarkTitleBar(HWND hwnd) {
     BOOL value = TRUE;
     DwmSetWindowAttribute(hwnd, 20 /*DWMWA_USE_IMMERSIVE_DARK_MODE*/, &value, sizeof(value));
 }
 
+//GLFW Error Debug
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void RenderFacialReconstructionTab();
+//Functions
+//GUI of Facial Tracking
+void RenderFacialTrackingTab();
 
-GLuint LoadTextureFromFile(const char* filename)
+//Loading Images as Texture
+GLuint LoadTextureFromFile(const char* filename);
+
+//Running Face Reconstruction Task in Python
+void runPythonConstruct(const std::string& selectedFilePath);
+
+int main()
 {
-    int width, height, channels;
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4);
-    if (data == NULL)
-    {
-        std::cout << "Failed to load image: " << filename << std::endl;
+    //Loading dll
+    HMODULE dll = LoadLibraryW(L"progress_shared.dll");
+    if (!dll) return 1;
+    //Loading dll function
+    auto get_current = (GetProgressFunc)GetProcAddress(dll, "get_current_progress");
+    auto get_total = (GetProgressFunc)GetProcAddress(dll, "get_total_progress");
+
+    //Python interpretator Configuration
+    std::string newPath = 
+    "E:/anaconda3/envs/pytorch3d;" 
+    "E:/anaconda3/envs/pytorch3d/Library/bin;" + 
+    std::string(std::getenv("PATH"));
+    _putenv_s("PATH", newPath.c_str());
+    _putenv_s("PYTHONHOME", "E:/anaconda3/envs/pytorch3d");
+    _putenv_s("PYTHONPATH", "E:/Project/DECA3/DECA/src");
+
+    try {
+        py::scoped_interpreter guard{}; // Initialize interpreter
+
+        glfwSetErrorCallback(glfw_error_callback);
+        if (!glfwInit())
+            return -1;
+
+        // Windowed mode (NOT fullscreen), but large size
+        int width = 1920;
+        int height = 1080;
+
+        // Decide GL+GLSL versions
+        const char* glsl_version = "#version 130";
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
+        // Get primary monitor and its video mode
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+        // Set window hints to match the monitor's settings (optional but safer)
+        glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+        glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+        glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+        glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+        // Optional: set some window hints
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // Allow resizing
+        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE); // Show minimize/maximize/close buttons
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API); // Use OpenGL
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE); // start maximized
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Window starts hidden
+
+        // Create windowed mode window
+        GLFWwindow* window = glfwCreateWindow(width, height, "FaceRec Studio", NULL, NULL);
+        if (window == NULL) {
+            glfwTerminate();
+            return -1;
+        }
+
+        HWND hwnd = glfwGetWin32Window(window);
+        EnableDarkTitleBar(hwnd);
+
+        // Force Windows to redraw the title bar immediately
+        SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+        // Now show the window
+        glfwShowWindow(window);
+        
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1); // Enable vsync
+
+        // Set dark background color
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+        // Initialize OpenGL loader + ImGui
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+        ImGui::StyleColorsDark();
+
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init(glsl_version);
+
+        // Main loop
+        while (!glfwWindowShouldClose(window))
+        {
+             //Polling the progress
+            if (shouldRunPython){
+               
+                cur = get_current_progress();
+                total = get_total_progress();
+            }
+
+            std::cout << "C++ Progress: " << cur << " / " << total << std::endl;
+
+            py::gil_scoped_release release; // This releases the GIL for this scope   
+            glfwPollEvents();
+
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            // Your main UI
+            {
+                // Before ImGui::Begin()
+                int display_w, display_h;
+                glfwGetFramebufferSize(window, &display_w, &display_h); // get current window size
+
+                ImGui::SetNextWindowPos(ImVec2(0, 0)); // always top-left
+                ImGui::SetNextWindowSize(ImVec2((float)display_w, (float)display_h)); // always fill the window
+                
+                ImGui::Begin("Facial Reconstruction App", nullptr,
+                    ImGuiWindowFlags_NoMove |
+                    ImGuiWindowFlags_NoCollapse |
+                    ImGuiWindowFlags_NoTitleBar
+                );
+
+                if (ImGui::BeginTabBar("MainTabs"))
+                {
+                    if (ImGui::BeginTabItem("Facial Capture"))
+                    {
+                        RenderFacialTrackingTab();
+                        ImGui::EndTabItem();
+                    }
+
+                    if (ImGui::BeginTabItem("Facial Reconstruction"))
+                    {
+                        ImGui::Text("Facial Capture content goes here...");
+                        ImGui::EndTabItem();;
+                    }
+
+                    ImGui::EndTabBar();
+                }
+
+                ImGui::End();
+
+                // After ImGui::Render() or inside your main loop:
+                static std::thread pythonThread;
+                if (shouldRunPython && !pythonThreadRunning) {
+                    pythonThreadRunning = true;
+                    std::string capturedPath = pendingPythonPath;
+
+                    //Running Python Backend in Background
+                    pythonThread = std::thread([capturedPath]() {
+                        try {
+                            py::gil_scoped_acquire gil;
+                            std::cout << "[Thread] Started lambda.\n";
+                
+                            if (!Py_IsInitialized()) {
+                                std::cerr << "Python is not initialized!\n";
+                            }
+                            std::cout << "[Thread] Py_IsInitialized: " << Py_IsInitialized() << std::endl;
+                            std::cout << "[Thread] PyGILState_Check: " << PyGILState_Check() << std::endl;
+                
+                            {
+                                //py::gil_scoped_acquire acquire; // Always acquire GIL before running Python
+                                std::cout << "[Thread] GIL acquired.\n";
+                
+                                std::cout << "Running in thread with file: " << capturedPath << std::endl;
+                                runPythonConstruct(capturedPath);
+                                std::cout << "Successfully constructed the face model.\n";
+                                std::cout << "All done!" << std::endl;
+                            }
+                
+                        } catch (const std::exception& e) {
+                            std::cerr << "C++ exception in thread: " << e.what() << std::endl;
+                        } catch (...) {
+                            std::cerr << "Unknown exception in Python thread!\n";
+                        }
+                        
+                        pythonThreadRunning = false;
+                        shouldRunPython = false;
+                    });
+                
+                    pythonThread.detach();
+                    
+                }                
+            }
+
+            // Rendering
+            ImGui::Render();
+            int display_w, display_h;
+            glfwGetFramebufferSize(window, &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(window);
+        }
+
+        // Cleanup
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        FreeLibrary(dll);
         return 0;
+    } catch (const std::exception& e) {
+        std::cerr << "Python initialization error: " << e.what() << std::endl;
+        return -1;
     }
-
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    stbi_image_free(data);
-
-    return textureID;
 }
 
-void runPythonTest() {
-    try {
-        py::print("Testing Python from C++");
-    } catch (const py::error_already_set& e) {
-        std::cerr << "Python error: " << e.what() << std::endl;
+void RenderFacialTrackingTab()
+{
+     //py::gil_scoped_acquire acquire;
+
+    //Loading Screen------------------------------------------------------------------------
+    // Constants
+    const int numSegments = 20;
+    const float barWidth = 300.0f;
+    const float barHeight = 20.0f;
+    const float spacing = 2.0f;
+    const float segmentWidth = (barWidth - spacing * (numSegments - 1)) / numSegments;
+    const float speed = 2.0f;  // how fast the animation loops
+
+    // Get draw position
+    ImVec2 barSize(barWidth, barHeight);
+    float availWidth = ImGui::GetContentRegionAvail().x;
+    float offsetX = (availWidth - barSize.x) * 0.5f;
+    if (offsetX > 0)
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+
+    // Reserve space for the bar
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    ImGui::Dummy(barSize);
+
+    // Animate
+    float t = ImGui::GetTime();
+    float offset = fmod(t * speed, numSegments);
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    //---------------------------------------------------------------------------------------
+
+    //Input Selection------------------------------------------------------------------------
+    static std::string selectedFilePath;
+    static std::string PreviewFilePath;
+    static std::string LandmarkFilePath;
+   
+    // Static textures: loaded only once
+    static GLuint previewTexture = 0;
+    static GLuint trackingTexture = 0;
+    static GLuint defaultTexture = 0;
+
+    // Log current texture IDs
+    std::cout << "[DEBUG] Texture States:" << std::endl;
+    std::cout << "  previewTexture ID:  " << previewTexture << std::endl;
+    std::cout << "  trackingTexture ID: " << trackingTexture << std::endl;
+    std::cout << "  defaultTexture ID:  " << defaultTexture << std::endl;
+
+    static std::string lastPreviewPath = "";
+    static std::string lastTrackingPath = "";
+
+    //---------------------------------------------------------------------------------------
+
+    // Load default "no image" texture once
+    if (defaultTexture == 0) {
+        std::cout << "[INFO] Creating default black texture." << std::endl;
+
+        const int width = 256;
+        const int height = 256;
+        unsigned char blackPixels[width * height * 3];
+        std::fill_n(blackPixels, width * height * 3, 0);
+
+        glGenTextures(1, &defaultTexture);
+        glBindTexture(GL_TEXTURE_2D, defaultTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, blackPixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        std::cout << "[INFO] Default texture ID: " << defaultTexture << std::endl;
     }
+
+    // Setting the Path of outputs and input
+    if (!selectedFilePath.empty()) {
+        std::cout << "[INFO] Selected file path: " << selectedFilePath << std::endl;
+
+        std::filesystem::path selectedPath(selectedFilePath);
+        std::string filename = selectedPath.stem().string();
+
+        std::string baseOutputPath = "E:/Project/DECA3/DECA/output/";
+
+        PreviewFilePath = selectedFilePath; // Direct preview of selected image
+        //PreviewFilePath = baseOutputPath + filename + "/inputs/" + filename + "_inputs.jpg";
+
+        std::cout << "[INFO] Preview path: " << PreviewFilePath << std::endl;
+        std::cout << "[INFO] Landmark path: " << LandmarkFilePath << std::endl;
+
+        // Reload preview texture only if path changes
+        if (PreviewFilePath != lastPreviewPath) {
+            if (previewTexture != 0) {
+                std::cout << "[INFO] Deleting old preview texture ID: " << previewTexture << std::endl;
+                glDeleteTextures(1, &previewTexture);
+                std::cout << "[DEBUG] - AFTER DELETE ORIGINAL defaultTexture - ID: " << defaultTexture << ", previewTexture ID: " << previewTexture << std::endl;
+                previewTexture = 0;
+            }
+            previewTexture = LoadTextureFromFile(PreviewFilePath.c_str());
+            std::cout << "[INFO] Loaded preview texture: " << PreviewFilePath << " -> ID: " << previewTexture << std::endl;
+            std::cout << "[DEBUG] defaultTexture ID: " << defaultTexture << ", previewTexture ID: " << previewTexture << std::endl;
+            lastPreviewPath = PreviewFilePath;
+        }
+
+        // Reload tracking texture only if path changes
+        if (LandmarkFilePath != lastTrackingPath) {
+            LandmarkFilePath = baseOutputPath + filename + "/landmarks2d/" + filename + "_landmarks2d.jpg";
+
+            if (trackingTexture != 0) {
+                std::cout << "[INFO] Deleting old tracking texture ID: " << trackingTexture << std::endl;
+                glDeleteTextures(1, &trackingTexture);
+                trackingTexture = 0;
+            }
+            trackingTexture = LoadTextureFromFile(LandmarkFilePath.c_str());
+            if (trackingTexture != 0) {
+                std::cout << "[INFO] Loaded tracking texture: " << LandmarkFilePath << " -> ID: " << trackingTexture << std::endl;
+            }
+            lastTrackingPath = LandmarkFilePath;
+        }
+    } else {
+        std::cout << "[INFO] No file selected. Using default black texture." << std::endl;
+    }
+
+    // Split vertically: Left big panel + Right control panel
+    ImGui::BeginChild("LeftSection", ImVec2(ImGui::GetContentRegionAvail().x * 0.7f, 0), false);
+    {
+        // Top Part: Image Preview and Facial Tracking Panels
+        ImGui::BeginChild("LeftTop", ImVec2(0, ImGui::GetContentRegionAvail().y - 60), true);
+        {
+            // Two children side-by-side without extra nesting
+            ImGui::BeginChild("LeftTab", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0), true);
+            {
+                if (ImGui::BeginTabBar("LeftTabBar"))
+                {
+                    if (ImGui::BeginTabItem("Image Preview"))
+                    {
+                        ImGui::Text("Image Preview Content");
+                        ImVec2 availableSize = ImGui::GetContentRegionAvail();
+                        if(!selectedFilePath.empty()){
+                            ImGui::Image((ImTextureID)(intptr_t)previewTexture, availableSize);
+                        }
+                        else{
+                            ImGui::Image((ImTextureID)(intptr_t)defaultTexture, availableSize);
+                        }
+                        
+                        //ImGui::Image((ImTextureID)123, ImVec2(-1, -1)); // Placeholder image
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndTabBar();
+                }
+            }
+            ImGui::EndChild();
+
+            ImGui::SameLine();
+
+            ImGui::BeginChild("RightTab", ImVec2(0, 0), true);
+            {
+                if (ImGui::BeginTabBar("RightTabBar"))
+                {
+                    if (ImGui::BeginTabItem("Facial Tracking"))
+                    {
+                        if (shouldRunPython) {
+                            previous_cur = cur;
+                            cur = get_current_progress();
+                            total = get_total_progress();
+                    
+                            std::cout << "C++ Progress: " << cur << " / " << total << std::endl;
+                    
+                            // Label
+                            std::string progressLabel = "Refreshing facial tracking data...";
+                            ImGui::Text("%s", progressLabel.c_str());
+                    
+                            // Dimensions
+                            ImVec2 barSize(300.0f, 20.0f); // bar width & height
+                            float spacing = 3.0f;
+                            int numSegments = 20;
+                            float segmentWidth = (barSize.x - spacing * (numSegments - 1)) / numSegments;
+                            float barHeight = barSize.y;
+                    
+                            float availWidth = ImGui::GetContentRegionAvail().x;
+                            float offsetX = (availWidth - barSize.x) * 0.5f;
+                            if (offsetX > 0)
+                                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+                    
+                            if (total > 0) {
+                                // Actual progress bar
+                                float progress = static_cast<float>(cur) / static_cast<float>(total);
+                                ImGui::ProgressBar(progress, barSize);
+                            } else {
+                                // Reserve space and get drawing area
+                                ImVec2 pos = ImGui::GetCursorScreenPos();
+                                ImGui::Dummy(barSize);  // Reserves the area for custom drawing
+                    
+                                ImDrawList* drawList = ImGui::GetWindowDrawList();
+                    
+                                // Animation phase
+                                float t = ImGui::GetTime();
+                                float speed = 2.0f;
+                                float offset = fmod(t * speed, static_cast<float>(numSegments));
+                    
+                                // Draw segments
+                                for (int i = 0; i < numSegments; ++i) {
+                                    float normIndex = (i + offset);
+                                    float alpha = 1.0f - fabsf(fmodf(normIndex, numSegments) - numSegments / 2.0f) / (numSegments / 2.0f);
+                                    alpha = std::clamp(alpha, 0.3f, 1.0f);
+                    
+                                    ImVec2 segMin = ImVec2(pos.x + i * (segmentWidth + spacing), pos.y);
+                                    ImVec2 segMax = ImVec2(segMin.x + segmentWidth, segMin.y + barHeight);
+                    
+                                    drawList->AddRectFilled(segMin, segMax, ImGui::GetColorU32(ImVec4(0.2f, 0.7f, 1.0f, alpha)), 3.0f);
+                                }
+                            }
+                        }
+                    
+                        // Placeholder image centered
+                        ImVec2 imageSize(200, 200);
+                        float availWidth = ImGui::GetContentRegionAvail().x;
+                        float offsetX = (availWidth - imageSize.x) * 0.5f;
+                        if (offsetX > 0)
+                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+                    
+                        if(!selectedFilePath.empty()){
+                            ImGui::Image((ImTextureID)(intptr_t)trackingTexture, imageSize);
+                        }
+                        else{
+                            ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize);
+                        }
+                    
+                        ImGui::EndTabItem();
+                    }
+                    
+                    
+                    
+                    
+                    ImGui::EndTabBar();
+                }
+            }
+            ImGui::EndChild();
+        }
+        ImGui::EndChild();
+
+        // Bottom Part: Timeline
+        ImGui::BeginChild("LeftBottom", ImVec2(0, 0), true);
+        {
+            static float currentFrame = 0.0f;
+            static int endFrame = 464;
+            ImGui::SliderFloat("Timeline", &currentFrame, 0.0f, (float)endFrame, "%.0f");
+        }
+        ImGui::EndChild();
+    }
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    // Right Control Panel
+    ImGui::BeginChild("RightSection", ImVec2(0, 0), true);
+    {
+        ImGui::Text("[Capture Source]");
+    
+        // Begin horizontal group: Button + Selected Path
+        ImGui::BeginGroup();
+        if (ImGui::Button("Choose File")) {
+            IGFD::FileDialogConfig config;
+            config.path = GetDesktopPath(); // Default to Desktop
+            config.countSelectionMax = 1;
+            config.flags = ImGuiFileDialogFlags_Modal;
+    
+            ImGuiFileDialog::Instance()->OpenDialog(
+                "ChooseCapture",
+                "Select Capture Source",
+                "Images and Videos{.png,.jpg,.jpeg,.bmp,.gif,.mp4,.avi,.mov,.mkv}",
+                config
+            );
+        }
+        ImGui::SameLine();
+    
+        // Limit max display width for the selected path
+        float availableWidth = ImGui::GetContentRegionAvail().x;
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + availableWidth);
+        ImGui::TextWrapped("%s", selectedFilePath.empty() ? "<No file selected>" : selectedFilePath.c_str());
+        ImGui::PopTextWrapPos();
+        ImGui::EndGroup();
+    
+        if (ImGuiFileDialog::Instance()->Display("ChooseCapture", ImGuiWindowFlags_NoCollapse, ImVec2(700, 400))) {
+            ImGui::SetNextWindowFocus();
+            if (ImGuiFileDialog::Instance()->IsOk()) {
+                selectedFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+                shouldRunPython = true;
+                pendingPythonPath = selectedFilePath;
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
+        
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+    
+        // Frame range input
+        static int startFrame = 0, endFrame = 464;
+        ImGui::InputInt("Start Frame to Process", &startFrame);
+        ImGui::InputInt("End Frame to Process", &endFrame);
+    }
+    
+    ImGui::EndChild();
 }
 
 void runPythonConstruct(const std::string& selectedFilePath) {
@@ -159,418 +647,53 @@ void runPythonConstruct(const std::string& selectedFilePath) {
     
 }
 
-
-int main()
+//LoadTextureFromFile
+GLuint LoadTextureFromFile(const char* filename)
 {
-    //testing------------------------------------------
-    /*HINSTANCE hDLL = LoadLibrary("progress_shared.dll");
-    if (!hDLL) {
-        std::cerr << "Failed to load DLL!" << std::endl;
-        return 1;
+    if (!std::filesystem::exists(filename)) {
+        std::cout << "[ERROR] File does not exist: " << filename << std::endl;
     }
-
-    auto get_current = (get_progress_t)GetProcAddress(hDLL, "get_current_progress");
-    auto get_total = (get_progress_t)GetProcAddress(hDLL, "get_total_progress");
-
-    if (!get_current || !get_total) {
-        std::cerr << "Failed to get functions!" << std::endl;
-        return 1;
-    }
-
-    int cur = get_current();
-    int total = get_total();
-
-    std::cout << "[C++] Read progress: " << cur << " / " << total << std::endl;
-
     
+    std::cout << "[DEBUG] Attempting to load texture from: " << filename << std::endl;
 
-    std::cout << "[C++] Waiting for Python to update progress..." << std::endl;
-    Sleep(6000); // Wait longer than Python sleep*/
-
-    //testing------------------------------------------
-
-    // Load the DLL once here
-    HMODULE dll = LoadLibraryW(L"progress_shared.dll");
-    if (!dll) return 1;
-
-    auto get_current = (GetProgressFunc)GetProcAddress(dll, "get_current_progress");
-    auto get_total = (GetProgressFunc)GetProcAddress(dll, "get_total_progress");
-
-    std::string newPath = 
-    "E:/anaconda3/envs/pytorch3d;" 
-    "E:/anaconda3/envs/pytorch3d/Library/bin;" + 
-    std::string(std::getenv("PATH"));
-
-    _putenv_s("PATH", newPath.c_str());
-    _putenv_s("PYTHONHOME", "E:/anaconda3/envs/pytorch3d");
-    _putenv_s("PYTHONPATH", "E:/Project/DECA3/DECA/src");
-    
-    int cur = get_current_progress();
-    int total = get_total_progress();
-
-    try {
-    
-        py::scoped_interpreter guard{}; // Initialize interpreter
-
-        glfwSetErrorCallback(glfw_error_callback);
-        if (!glfwInit())
-            return -1;
-
-        // Windowed mode (NOT fullscreen), but large size
-        int width = 1920;
-        int height = 1080;
-
-        // Decide GL+GLSL versions
-        const char* glsl_version = "#version 130";
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-        // Get primary monitor and its video mode
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
-        // Set window hints to match the monitor's settings (optional but safer)
-        glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-        glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-        glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-        glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-        // Optional: set some window hints
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // Allow resizing
-        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE); // Show minimize/maximize/close buttons
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API); // Use OpenGL
-        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE); // start maximized
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // Window starts hidden
-
-        // Create windowed mode window
-        GLFWwindow* window = glfwCreateWindow(width, height, "FaceRec Studio", NULL, NULL);
-        if (window == NULL) {
-            glfwTerminate();
-            return -1;
-        }
-
-        HWND hwnd = glfwGetWin32Window(window);
-        EnableDarkTitleBar(hwnd);
-
-        // Force Windows to redraw the title bar immediately
-        SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-        // Now show the window
-        glfwShowWindow(window);
-        
-        glfwMakeContextCurrent(window);
-        glfwSwapInterval(1); // Enable vsync
-
-        // Set dark background color
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        
-
-
-        // Initialize OpenGL loader + ImGui
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-        ImGui::StyleColorsDark();
-
-        ImGui_ImplGlfw_InitForOpenGL(window, true);
-        ImGui_ImplOpenGL3_Init(glsl_version);
-
-        // Main loop
-        while (!glfwWindowShouldClose(window))
-        {
-            py::gil_scoped_release release; // This releases the GIL for this scope   
-            glfwPollEvents();
-
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
-
-            // Your main UI
-            {
-                // Before ImGui::Begin()
-                int display_w, display_h;
-                glfwGetFramebufferSize(window, &display_w, &display_h); // get current window size
-
-                ImGui::SetNextWindowPos(ImVec2(0, 0)); // always top-left
-                ImGui::SetNextWindowSize(ImVec2((float)display_w, (float)display_h)); // always fill the window
-                
-                ImGui::Begin("Facial Reconstruction App", nullptr,
-                    ImGuiWindowFlags_NoMove |
-                    ImGuiWindowFlags_NoCollapse |
-                    ImGuiWindowFlags_NoTitleBar
-                );
-
-                if (ImGui::BeginTabBar("MainTabs"))
-                {
-                    if (ImGui::BeginTabItem("Facial Capture"))
-                    {
-                        RenderFacialReconstructionTab();
-                        ImGui::EndTabItem();
-
-                    }
-
-                    if (ImGui::BeginTabItem("Facial Reconstruction"))
-                    {
-                        ImGui::Text("Facial Capture content goes here...");
-                        ImGui::EndTabItem();;
-                    }
-
-                    ImGui::EndTabBar();
-                }
-
-                ImGui::End();
-
-                // After ImGui::Render() or inside your main loop:
-                static std::thread pythonThread;
-                if (shouldRunPython && !pythonThreadRunning) {
-                    pythonThreadRunning = true;
-                    std::string capturedPath = pendingPythonPath;
-                    
-                    pythonThread = std::thread([capturedPath]() {
-                        try {
-                            py::gil_scoped_acquire gil;
-                            std::cout << "[Thread] Started lambda.\n";
-                
-                            if (!Py_IsInitialized()) {
-                                std::cerr << "Python is not initialized!\n";
-                            }
-                            std::cout << "[Thread] Py_IsInitialized: " << Py_IsInitialized() << std::endl;
-                            std::cout << "[Thread] PyGILState_Check: " << PyGILState_Check() << std::endl;
-                
-                            {
-                                //py::gil_scoped_acquire acquire; // Always acquire GIL before running Python
-                                std::cout << "[Thread] GIL acquired.\n";
-                
-                                std::cout << "Running in thread with file: " << capturedPath << std::endl;
-                                runPythonConstruct(capturedPath);
-                                std::cout << "Successfully constructed the face model.\n";
-                                std::cout << "All done!" << std::endl;
-                            }
-                
-                        } catch (const std::exception& e) {
-                            std::cerr << "C++ exception in thread: " << e.what() << std::endl;
-                        } catch (...) {
-                            std::cerr << "Unknown exception in Python thread!\n";
-                        }
-                        
-                        pythonThreadRunning = false;
-                        shouldRunPython = false;
-                    });
-                
-                    pythonThread.detach();
-
-                    // Start progress polling in a thread
-                    while (true) {
-                        {
-                            /*py::gil_scoped_acquire acquire;
-                            py::object face_module = py::module_::import("face_reconstruct");
-                            py::object progress = face_module.attr("get_progress")();
-                            int total = progress["total"].cast<int>();
-                            int done = progress["done"].cast<int>();
-                            std::cout << "Progress: " << done << "/" << total << "\n";*/
-
-                            //--getting variables from progress_module.hpp
-                            /*auto progress = get_global_progress(); // or similar
-                            
-                            int attempts = 50;
-                            while (!(progress = get_global_progress()) && attempts-- > 0) {
-                                //std::cout << "Waiting for progress...\n";
-                                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                            }
-                            if (!progress) {
-                                std::cout << "❌ Progress is still null after waiting!" << std::endl;
-                                break;
-                            }
-                            std::cout << "C++Progress: " << progress->get_current() << " / " << progress->get_total() << std::endl;*/
-
-                            //--getting shared variables from progress_shared.hpp
-
-                            cur = get_current_progress();
-                            total = get_total_progress();
-                            std::cout << "C++ Progress: " << cur << " / " << total << std::endl;
-                            if (!shouldRunPython) break;
-                        }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                    }
-                    
-
-                }
-                
-                
-            }
-
-            // Rendering
-            ImGui::Render();
-            int display_w, display_h;
-            glfwGetFramebufferSize(window, &display_w, &display_h);
-            glViewport(0, 0, display_w, display_h);
-            //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-            glfwSwapBuffers(window);
-        }
-
-        // Cleanup
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
-
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        FreeLibrary(dll);
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4); // Force RGBA
+    if (data == nullptr)
+    {
+        std::cout << "[ERROR] Failed to load image: " << filename << std::endl;
         return 0;
-    } catch (const std::exception& e) {
-        std::cerr << "Python initialization error: " << e.what() << std::endl;
-        return -1;
     }
+
+    std::cout << "[INFO] Image loaded: " << filename << " (" << width << "x" << height 
+              << ", channels requested: 4, original channels: " << channels << ")" << std::endl;
+
+    GLuint textureID = 0;
+    glGenTextures(1, &textureID);
+    if (textureID == 0)
+    {
+        std::cout << "[ERROR] glGenTextures failed!" << std::endl;
+        stbi_image_free(data);
+        return 0;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cout << "[ERROR] OpenGL error after glTexImage2D: " << err << std::endl;
+    }
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind for safety
+    stbi_image_free(data);
+
+    std::cout << "[DEBUG] Texture loaded successfully with ID: " << textureID << std::endl;
+
+    return textureID;
 }
-
-void RenderFacialReconstructionTab()
-{
-    //py::gil_scoped_acquire acquire;
-
-    static GLuint imageTexture = 0; // <--- static, so it loads only once
-
-    if (imageTexture == 0)
-    {
-        imageTexture = LoadTextureFromFile("E:/Project/DECA3/DECA/TestSamples/examples/results/IMG_0392_inputs/IMG_0392_inputs_inputs.jpg"); // <-- change path here
-    }
-
-    // Split vertically: Left big panel + Right control panel
-    ImGui::BeginChild("LeftSection", ImVec2(ImGui::GetContentRegionAvail().x * 0.7f, 0), false);
-    {
-        // Top Part: Image Preview and Facial Tracking Panels
-        ImGui::BeginChild("LeftTop", ImVec2(0, ImGui::GetContentRegionAvail().y - 60), true);
-        {
-            // Two children side-by-side without extra nesting
-            ImGui::BeginChild("LeftTab", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0), true);
-            {
-                if (ImGui::BeginTabBar("LeftTabBar"))
-                {
-                    if (ImGui::BeginTabItem("Image Preview"))
-                    {
-                        ImGui::Text("Image Preview Content");
-                        ImVec2 availableSize = ImGui::GetContentRegionAvail();
-                        ImGui::Image((ImTextureID)(intptr_t)imageTexture, availableSize);
-                        //ImGui::Image((ImTextureID)123, ImVec2(-1, -1)); // Placeholder image
-                        ImGui::EndTabItem();
-                    }
-                    ImGui::EndTabBar();
-                }
-            }
-            ImGui::EndChild();
-
-            ImGui::SameLine();
-
-            ImGui::BeginChild("RightTab", ImVec2(0, 0), true);
-            {
-                if (ImGui::BeginTabBar("RightTabBar"))
-                {
-                    if (ImGui::BeginTabItem("Facial Tracking"))
-                    {
-                        static float phase = 0.0f;
-                        float speed = 1.5f;  // Controls how fast the bar moves
-                        float t = ImGui::GetTime();  // Elapsed time since app start
-                    
-                        // Simulate a bar moving left to right repeatedly
-                        phase = fmod(t * speed, 1.0f);  // Wrap around at 1.0f
-                    
-                        // Optional: fancy sweeping effect with triangle shape
-                        float sweep = fabs(phase - 0.5f) * 2.0f;  // creates a triangle wave from 0 to 1 and back
-                    
-                        // Label
-                        progressLabel = "Refreshing facial tracking data...";
-                    
-                        ImGui::Text("%s", progressLabel.c_str());
-                    
-                        // Custom green progress bar
-                        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.7f, 1.0f, 1.0f));  // blue-ish sweep
-                        ImGui::ProgressBar(sweep, ImVec2(0.0f, 0.0f));  // Full width
-                        ImGui::PopStyleColor();
-                    
-                        ImGui::Image((ImTextureID)789, ImVec2(-1, -1)); // Placeholder image
-                    
-                        ImGui::EndTabItem();
-                    }
-                    
-                    
-                    ImGui::EndTabBar();
-                }
-            }
-            ImGui::EndChild();
-        }
-        ImGui::EndChild();
-
-        // Bottom Part: Timeline
-        ImGui::BeginChild("LeftBottom", ImVec2(0, 0), true);
-        {
-            static float currentFrame = 0.0f;
-            static int endFrame = 464;
-            ImGui::SliderFloat("Timeline", &currentFrame, 0.0f, (float)endFrame, "%.0f");
-        }
-        ImGui::EndChild();
-    }
-    ImGui::EndChild();
-
-    ImGui::SameLine();
-
-    // Right Control Panel
-    ImGui::BeginChild("RightSection", ImVec2(0, 0), true);
-    {
-        ImGui::Text("[Capture Source]");
-    
-        static std::string selectedFilePath;
-    
-        // Begin horizontal group: Button + Selected Path
-        ImGui::BeginGroup();
-        if (ImGui::Button("Choose File")) {
-            IGFD::FileDialogConfig config;
-            config.path = GetDesktopPath(); // Default to Desktop
-            config.countSelectionMax = 1;
-            config.flags = ImGuiFileDialogFlags_Modal;
-    
-            ImGuiFileDialog::Instance()->OpenDialog(
-                "ChooseCapture",
-                "Select Capture Source",
-                "Images and Videos{.png,.jpg,.jpeg,.bmp,.gif,.mp4,.avi,.mov,.mkv}",
-                config
-            );
-        }
-        ImGui::SameLine();
-    
-        // Limit max display width for the selected path
-        float availableWidth = ImGui::GetContentRegionAvail().x;
-        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + availableWidth);
-        ImGui::TextWrapped("%s", selectedFilePath.empty() ? "<No file selected>" : selectedFilePath.c_str());
-        ImGui::PopTextWrapPos();
-        ImGui::EndGroup();
-    
-        if (ImGuiFileDialog::Instance()->Display("ChooseCapture", ImGuiWindowFlags_NoCollapse, ImVec2(700, 400))) {
-            ImGui::SetNextWindowFocus();
-            if (ImGuiFileDialog::Instance()->IsOk()) {
-                selectedFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
-                shouldRunPython = true;
-                pendingPythonPath = selectedFilePath;
-            }
-            ImGuiFileDialog::Instance()->Close();
-        }
-        
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-    
-        // Frame range input
-        static int startFrame = 0, endFrame = 464;
-        ImGui::InputInt("Start Frame to Process", &startFrame);
-        ImGui::InputInt("End Frame to Process", &endFrame);
-    }
-    
-    ImGui::EndChild();
-}
-
-
-
 

@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "Debug/mybridge.cp311-win_amd64.pyd"
+			"path" : "RelWithDebInfo/mybridge.cp311-win_amd64.pyd"
 		},
 		{
-			"path" : "Debug/mybridge.pdb"
+			"path" : "RelWithDebInfo/mybridge.pdb"
 		}
 	],
 	"backtrace" : 4,
@@ -82,16 +82,16 @@
 				"parent" : 1
 			},
 			{
-				"command" : 5,
-				"file" : 2,
-				"line" : 194,
-				"parent" : 1
-			},
-			{
 				"command" : 6,
 				"file" : 3,
 				"line" : 21,
 				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 2,
+				"line" : 194,
+				"parent" : 1
 			}
 		]
 	},
@@ -101,19 +101,19 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 -std:c++17 -MDd"
+					"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++17 -MD"
 				},
 				{
 					"backtrace" : 8,
 					"fragment" : "/bigobj"
+				},
+				{
+					"backtrace" : 8,
+					"fragment" : "/MP"
 				}
 			],
 			"defines" : 
 			[
-				{
-					"backtrace" : 9,
-					"define" : "Py_DEBUG"
-				},
 				{
 					"define" : "mybridge_EXPORTS"
 				}
@@ -125,12 +125,12 @@
 					"path" : "E:/Project/DECA3/DECA/src"
 				},
 				{
-					"backtrace" : 10,
+					"backtrace" : 9,
 					"isSystem" : true,
 					"path" : "E:/anaconda3/envs/pytorch3d/include"
 				},
 				{
-					"backtrace" : 9,
+					"backtrace" : 10,
 					"isSystem" : true,
 					"path" : "E:/Project/DECA3/DECA/vcpkg_installed/x64-windows/include"
 				}
@@ -140,9 +140,9 @@
 			{
 				"backtraces" : 
 				[
-					9,
-					9,
-					9
+					10,
+					10,
+					10
 				],
 				"standard" : "17"
 			},
@@ -155,11 +155,11 @@
 	"dependencies" : 
 	[
 		{
-			"backtrace" : 6,
-			"id" : "progress_shared::@6890427a1f51a3e7e1df"
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
 		},
 		{
-			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+			"backtrace" : 6,
+			"id" : "progress_shared::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "mybridge::@6890427a1f51a3e7e1df",
@@ -178,7 +178,7 @@
 			},
 			{
 				"backtrace" : 6,
-				"fragment" : "Debug\\progress_shared.lib",
+				"fragment" : "RelWithDebInfo\\progress_shared.lib",
 				"role" : "libraries"
 			},
 			{

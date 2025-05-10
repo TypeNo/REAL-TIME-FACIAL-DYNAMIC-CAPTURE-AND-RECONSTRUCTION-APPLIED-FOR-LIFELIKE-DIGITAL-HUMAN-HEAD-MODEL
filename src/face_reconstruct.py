@@ -2,7 +2,7 @@ import os, sys
 
 sys.path.append("E:/Project/DECA3/DECA/build/Release")
 import mybridge
-print(mybridge.__file__)
+#print(mybridge.__file__)
 #progress = mybridge.create_progress()
 #mybridge.set_global_progress(progress)
 
