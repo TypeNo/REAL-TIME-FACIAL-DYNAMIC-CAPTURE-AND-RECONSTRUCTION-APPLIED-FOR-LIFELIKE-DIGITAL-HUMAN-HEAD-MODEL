@@ -28,6 +28,7 @@ using namespace std::chrono_literals;
 #include "progress_shared.hpp"
 #include <windows.h>
 #include <algorithm>  // for std::clamp
+#include <filesystem>
 
 
 typedef void (__cdecl *update_progress_t)(int, int);
@@ -76,11 +77,28 @@ static void glfw_error_callback(int error, const char* description)
 //GUI of Facial Tracking
 void RenderFacialTrackingTab();
 
-//Loading Images as Texture
+//IMGUI Image Rendering------------------------------------------------------------------------
+static std::string selectedFilePath;
+static std::string Last_selectedFilePath;
+static std::string PreviewFolderPath;
+static std::string LandmarkFolderPath;
+static std::string lastTrackingPath = "";
+static std::map<std::string, GLuint> trackingTextures;  // Store all tracking textures
+static std::map<std::string, GLuint> previewTextures;  // Store all preview textures
+
+//Updating Tracking Images
+void UpdateTexture(const std::string& FolderPath, std::map<std::string, GLuint> Textures);
+
+//Loading Single Images as Texture
 GLuint LoadTextureFromFile(const char* filename);
+
+//Delete Tracking Images
+void DeleteAllTextures(std::map<std::string, GLuint> Textures); 
+//----------------------------------------------------------------------------------------------
 
 //Running Face Reconstruction Task in Python
 void runPythonConstruct(const std::string& selectedFilePath);
+
 
 int main()
 {
@@ -320,10 +338,7 @@ void RenderFacialTrackingTab()
     //---------------------------------------------------------------------------------------
 
     //Input Selection------------------------------------------------------------------------
-    static std::string selectedFilePath;
-    static std::string PreviewFilePath;
-    static std::string LandmarkFilePath;
-   
+    
     // Static textures: loaded only once
     static GLuint previewTexture = 0;
     static GLuint trackingTexture = 0;
@@ -334,9 +349,6 @@ void RenderFacialTrackingTab()
     std::cout << "  previewTexture ID:  " << previewTexture << std::endl;
     std::cout << "  trackingTexture ID: " << trackingTexture << std::endl;
     std::cout << "  defaultTexture ID:  " << defaultTexture << std::endl;
-
-    static std::string lastPreviewPath = "";
-    static std::string lastTrackingPath = "";
 
     //---------------------------------------------------------------------------------------
 
@@ -367,41 +379,20 @@ void RenderFacialTrackingTab()
 
         std::string baseOutputPath = "E:/Project/DECA3/DECA/output/";
 
-        PreviewFilePath = selectedFilePath; // Direct preview of selected image
-        //PreviewFilePath = baseOutputPath + filename + "/inputs/" + filename + "_inputs.jpg";
-
-        std::cout << "[INFO] Preview path: " << PreviewFilePath << std::endl;
-        std::cout << "[INFO] Landmark path: " << LandmarkFilePath << std::endl;
+        LandmarkFolderPath = baseOutputPath + filename + "/landmarks2d/" + filename;
+        PreviewFolderPath = baseOutputPath + filename + "/inputs/" + filename;
 
         // Reload preview texture only if path changes
-        if (PreviewFilePath != lastPreviewPath) {
-            if (previewTexture != 0) {
-                std::cout << "[INFO] Deleting old preview texture ID: " << previewTexture << std::endl;
-                glDeleteTextures(1, &previewTexture);
-                std::cout << "[DEBUG] - AFTER DELETE ORIGINAL defaultTexture - ID: " << defaultTexture << ", previewTexture ID: " << previewTexture << std::endl;
-                previewTexture = 0;
-            }
-            previewTexture = LoadTextureFromFile(PreviewFilePath.c_str());
-            std::cout << "[INFO] Loaded preview texture: " << PreviewFilePath << " -> ID: " << previewTexture << std::endl;
-            std::cout << "[DEBUG] defaultTexture ID: " << defaultTexture << ", previewTexture ID: " << previewTexture << std::endl;
-            lastPreviewPath = PreviewFilePath;
+        if (selectedFilePath != Last_selectedFilePath) {
+            DeleteAllTextures(previewTextures);
+            DeleteAllTextures(trackingTextures);
         }
+        
+        UpdateTexture(LandmarkFolderPath, previewTextures);
+        UpdateTexture(LandmarkFolderPath, trackingTextures);
+        
 
-        // Reload tracking texture only if path changes
-        if (LandmarkFilePath != lastTrackingPath) {
-            LandmarkFilePath = baseOutputPath + filename + "/landmarks2d/" + filename + "_landmarks2d.jpg";
 
-            if (trackingTexture != 0) {
-                std::cout << "[INFO] Deleting old tracking texture ID: " << trackingTexture << std::endl;
-                glDeleteTextures(1, &trackingTexture);
-                trackingTexture = 0;
-            }
-            trackingTexture = LoadTextureFromFile(LandmarkFilePath.c_str());
-            if (trackingTexture != 0) {
-                std::cout << "[INFO] Loaded tracking texture: " << LandmarkFilePath << " -> ID: " << trackingTexture << std::endl;
-            }
-            lastTrackingPath = LandmarkFilePath;
-        }
     } else {
         std::cout << "[INFO] No file selected. Using default black texture." << std::endl;
     }
@@ -569,6 +560,7 @@ void RenderFacialTrackingTab()
         if (ImGuiFileDialog::Instance()->Display("ChooseCapture", ImGuiWindowFlags_NoCollapse, ImVec2(700, 400))) {
             ImGui::SetNextWindowFocus();
             if (ImGuiFileDialog::Instance()->IsOk()) {
+                Last_selectedFilePath = selectedFilePath;
                 selectedFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
                 shouldRunPython = true;
                 pendingPythonPath = selectedFilePath;
@@ -695,5 +687,58 @@ GLuint LoadTextureFromFile(const char* filename)
     std::cout << "[DEBUG] Texture loaded successfully with ID: " << textureID << std::endl;
 
     return textureID;
+}
+
+void UpdateTexture(const std::string& FolderPath, std::map<std::string, GLuint> Textures) {
+    namespace fs = std::filesystem;
+
+    if (!fs::exists(LandmarkFolderPath)) {
+        std::cout << "[INFO] Folder does not exist yet: " << FolderPath << std::endl;
+        return;
+    }
+
+    // Find latest .jpg file in folder
+    std::string latestFile;
+    fs::file_time_type latestTime;
+
+    for (const auto& entry : fs::directory_iterator(LandmarkFolderPath)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".jpg") {
+            auto writeTime = fs::last_write_time(entry);
+            if (writeTime > latestTime) {
+                latestTime = writeTime;
+                latestFile = entry.path().string();
+            }
+        }
+    }
+
+    if (latestFile.empty()) {
+        std::cout << "[INFO] No image files found in: " << LandmarkFolderPath << std::endl;
+        return;
+    }
+
+    if (latestFile != lastTrackingPath) {
+        // New file detected — load texture and keep old ones
+        GLuint newTexture = LoadTextureFromFile(latestFile.c_str());
+        if (newTexture != 0) {
+            Textures[latestFile] = newTexture;
+            lastTrackingPath = latestFile;
+            std::cout << "[INFO] Loaded new texture: " << latestFile << " -> ID: " << newTexture << std::endl;
+        } else {
+            std::cout << "[WARN] Failed to load new texture: " << latestFile << std::endl;
+        }
+    } else {
+        std::cout << "[DEBUG] No new image. Latest: " << lastTrackingPath << std::endl;
+    }
+}
+
+void DeleteAllTextures(std::map<std::string, GLuint> Textures) {
+    for (const auto& pair : trackingTextures) {
+        GLuint texID = pair.second;
+        if (texID != 0) {
+            std::cout << "[INFO] Deleting texture '" << pair.first << "' (ID: " << texID << ")" << std::endl;
+            glDeleteTextures(1, &texID);
+        }
+    }
+    trackingTextures.clear();  // Clear the map after deletion
 }
 
