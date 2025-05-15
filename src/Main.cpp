@@ -441,6 +441,7 @@ void RenderFacialTrackingTab()
         // Top Part: Image Preview and Facial Tracking Panels
         ImGui::BeginChild("LeftTop", ImVec2(0, ImGui::GetContentRegionAvail().y - 60), true);
         {
+            ImVec2 leftTopMin = ImGui::GetCursorScreenPos(); // Top-left of "LeftTop"
             // Two children side-by-side without extra nesting
             ImGui::BeginChild("LeftTab", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0), true);
             {
@@ -510,48 +511,6 @@ void RenderFacialTrackingTab()
                             ImVec2 imagePos = ImGui::GetCursorScreenPos();
                             ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize);
                     
-                            if (shouldRunPython) {
-                                // Same logic as above, but over default image
-                                ImVec2 barSize(300.0f, 20.0f);
-                                ImVec2 center = ImVec2(imagePos.x + imageSize.x * 0.5f, imagePos.y + imageSize.y * 0.5f);
-                                ImVec2 barMin = ImVec2(center.x - barSize.x * 0.5f, center.y - barSize.y * 0.5f);
-                                ImVec2 barMax = ImVec2(barMin.x + barSize.x, barMin.y + barSize.y);
-                    
-                                ImDrawList* drawList = ImGui::GetWindowDrawList();
-                    
-                                if (total > 0) {
-                                    float progress = static_cast<float>(cur) / static_cast<float>(total);
-                                    drawList->AddRectFilled(barMin, barMax, ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.3f, 0.8f)), 5.0f);
-                                    ImVec2 fillMax = ImVec2(barMin.x + barSize.x * progress, barMax.y);
-                                    drawList->AddRectFilled(barMin, fillMax, ImGui::GetColorU32(ImVec4(0.2f, 0.7f, 1.0f, 0.9f)), 5.0f);
-                                } else {
-                                    float spacing = 3.0f;
-                                    int numSegments = 20;
-                                    float segmentWidth = (barSize.x - spacing * (numSegments - 1)) / numSegments;
-                                    float barHeight = barSize.y;
-                    
-                                    float t = ImGui::GetTime();
-                                    float speed = 2.0f;
-                                    float offset = fmod(t * speed, static_cast<float>(numSegments));
-                    
-                                    for (int i = 0; i < numSegments; ++i) {
-                                        float normIndex = (i + offset);
-                                        float alpha = 1.0f - fabsf(fmodf(normIndex, numSegments) - numSegments / 2.0f) / (numSegments / 2.0f);
-                                        alpha = std::clamp(alpha, 0.3f, 1.0f);
-                    
-                                        ImVec2 segMin = ImVec2(barMin.x + i * (segmentWidth + spacing), barMin.y);
-                                        ImVec2 segMax = ImVec2(segMin.x + segmentWidth, segMin.y + barHeight);
-                    
-                                        drawList->AddRectFilled(segMin, segMax, ImGui::GetColorU32(ImVec4(0.2f, 0.7f, 1.0f, alpha)), 3.0f);
-                                    }
-                                }
-                    
-                                std::string progressLabel = "Refreshing facial tracking data...";
-                                ImVec2 textSize = ImGui::CalcTextSize(progressLabel.c_str());
-                                ImVec2 textPos = ImVec2(center.x - textSize.x * 0.5f, barMin.y - textSize.y - 5.0f);
-                                drawList->AddText(textPos, ImGui::GetColorU32(ImVec4(1, 1, 1, 1)), progressLabel.c_str());
-                            }
-                    
                             // Debug output
                             ImGui::Text("No valid texture to show.");
                             ImGui::Text("sortedTrackingKeys size: %d", (int)sortedTrackingKeys.size());
@@ -560,12 +519,52 @@ void RenderFacialTrackingTab()
                     
                         ImGui::EndTabItem();
                     }
-                         
                                  
                     ImGui::EndTabBar();
                 }
             }
             ImGui::EndChild();
+                // === Centered Overlay Progress Bar ===
+            if (shouldRunPython) {
+                ImVec2 leftTopMax = ImGui::GetItemRectMax(); // Bottom-right of "LeftTop"
+                ImVec2 center = ImVec2((leftTopMin.x + leftTopMax.x) * 0.5f, (leftTopMin.y + leftTopMax.y) * 0.5f);
+                ImVec2 barSize(300.0f, 20.0f);
+                ImVec2 barMin = ImVec2(center.x - barSize.x * 0.5f, center.y - barSize.y * 0.5f);
+                ImVec2 barMax = ImVec2(barMin.x + barSize.x, barMin.y + barSize.y);
+
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+                if (total > 0) {
+                    float progress = static_cast<float>(cur) / static_cast<float>(total);
+                    drawList->AddRectFilled(barMin, barMax, ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.3f, 0.8f)), 5.0f);
+                    ImVec2 fillMax = ImVec2(barMin.x + barSize.x * progress, barMax.y);
+                    drawList->AddRectFilled(barMin, fillMax, ImGui::GetColorU32(ImVec4(0.2f, 0.7f, 1.0f, 0.9f)), 5.0f);
+                } else {
+                    float spacing = 3.0f;
+                    int numSegments = 20;
+                    float segmentWidth = (barSize.x - spacing * (numSegments - 1)) / numSegments;
+                    float barHeight = barSize.y;
+
+                    float t = ImGui::GetTime();
+                    float speed = 2.0f;
+                    float offset = fmod(t * speed, static_cast<float>(numSegments));
+
+                    for (int i = 0; i < numSegments; ++i) {
+                        float normIndex = (i + offset);
+                        float alpha = 1.0f - fabsf(fmodf(normIndex, numSegments) - numSegments / 2.0f) / (numSegments / 2.0f);
+                        alpha = std::clamp(alpha, 0.3f, 1.0f);
+
+                        ImVec2 segMin = ImVec2(barMin.x + i * (segmentWidth + spacing), barMin.y);
+                        ImVec2 segMax = ImVec2(segMin.x + segmentWidth, segMin.y + barHeight);
+                        drawList->AddRectFilled(segMin, segMax, ImGui::GetColorU32(ImVec4(0.2f, 0.7f, 1.0f, alpha)), 3.0f);
+                    }
+                }
+
+                std::string progressLabel = "Refreshing facial tracking data...";
+                ImVec2 textSize = ImGui::CalcTextSize(progressLabel.c_str());
+                ImVec2 textPos = ImVec2(center.x - textSize.x * 0.5f, barMin.y - textSize.y - 5.0f);
+                drawList->AddText(textPos, ImGui::GetColorU32(ImVec4(1, 1, 1, 1)), progressLabel.c_str());
+            }
         }
         ImGui::EndChild();
 
