@@ -310,8 +310,64 @@ int main()
                 
                     pythonThread.detach();
                     
-                }                
+                }
+                // ---------- Overlay Progress Bar ----------
+                if (shouldRunPython) {
+                    std::cout <<"Overlay block running!\n";
+                    ImGui::SetNextWindowPos(ImVec2(0, 0));
+                    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+                    ImGui::Begin("Overlay", nullptr,
+                        ImGuiWindowFlags_NoDecoration |
+                        ImGuiWindowFlags_NoMove |
+                        ImGuiWindowFlags_NoSavedSettings |
+                        ImGuiWindowFlags_AlwaysAutoResize |
+                        ImGuiWindowFlags_NoFocusOnAppearing |
+                        ImGuiWindowFlags_NoInputs |
+                        //ImGuiWindowFlags_NoBackground |
+                        ImGuiWindowFlags_NoBringToFrontOnFocus |
+                        ImGuiWindowFlags_NoNav);
+                
+                    ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+                    ImVec2 center = ImVec2(displaySize.x * 0.5f, displaySize.y * 0.5f);
+                    ImVec2 barSize(400.0f, 24.0f);
+                    ImVec2 barMin = ImVec2(center.x - barSize.x * 0.5f, center.y);
+                    ImVec2 barMax = ImVec2(barMin.x + barSize.x, barMin.y + barSize.y);
+                
+                    if (total > 0) {
+                        float progress = static_cast<float>(cur) / static_cast<float>(total);
+                        ImGui::GetWindowDrawList()->AddRectFilled(barMin, barMax, IM_COL32(80, 80, 80, 200), 6.0f);
+                        ImGui::GetWindowDrawList()->AddRectFilled(barMin, ImVec2(barMin.x + progress * barSize.x, barMax.y),
+                            IM_COL32(50, 160, 255, 255), 6.0f);
+                    } else {
+                        // Indeterminate animation bar
+                        int numSegments = 15;
+                        float spacing = 4.0f;
+                        float segmentWidth = (barSize.x - spacing * (numSegments - 1)) / numSegments;
+                        float t = ImGui::GetTime();
+                        float speed = 2.5f;
+                        float offset = fmod(t * speed, static_cast<float>(numSegments));
+                
+                        for (int i = 0; i < numSegments; ++i) {
+                            float alpha = 1.0f - fabsf(fmodf(i + offset, numSegments) - numSegments / 2.0f) / (numSegments / 2.0f);
+                            alpha = std::clamp(alpha, 0.3f, 1.0f);
+                            ImVec2 segMin = ImVec2(barMin.x + i * (segmentWidth + spacing), barMin.y);
+                            ImVec2 segMax = ImVec2(segMin.x + segmentWidth, segMin.y + barSize.y);
+                            ImGui::GetWindowDrawList()->AddRectFilled(segMin, segMax,
+                                ImGui::GetColorU32(ImVec4(0.2f, 0.7f, 1.0f, alpha)), 4.0f);
+                        }
+                    }
+                
+                    std::string label = "Processing facial reconstruction...";
+                    ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+                    ImVec2 textPos = ImVec2(center.x - textSize.x * 0.5f, barMin.y - textSize.y - 12.0f);
+                    ImGui::GetWindowDrawList()->AddText(textPos, IM_COL32_WHITE, label.c_str());
+                
+                    ImGui::End();
+                }
+                                
             }
+
+            // === Then finish the frame
 
             // Rendering
             ImGui::Render();
@@ -524,48 +580,8 @@ void RenderFacialTrackingTab()
                 }
             }
             ImGui::EndChild();
-                // === Centered Overlay Progress Bar ===
-            if (shouldRunPython) {
-                ImVec2 leftTopMax = ImGui::GetItemRectMax(); // Bottom-right of "LeftTop"
-                ImVec2 center = ImVec2((leftTopMin.x + leftTopMax.x) * 0.5f, (leftTopMin.y + leftTopMax.y) * 0.5f);
-                ImVec2 barSize(300.0f, 20.0f);
-                ImVec2 barMin = ImVec2(center.x - barSize.x * 0.5f, center.y - barSize.y * 0.5f);
-                ImVec2 barMax = ImVec2(barMin.x + barSize.x, barMin.y + barSize.y);
-
-                ImDrawList* drawList = ImGui::GetWindowDrawList();
-
-                if (total > 0) {
-                    float progress = static_cast<float>(cur) / static_cast<float>(total);
-                    drawList->AddRectFilled(barMin, barMax, ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.3f, 0.8f)), 5.0f);
-                    ImVec2 fillMax = ImVec2(barMin.x + barSize.x * progress, barMax.y);
-                    drawList->AddRectFilled(barMin, fillMax, ImGui::GetColorU32(ImVec4(0.2f, 0.7f, 1.0f, 0.9f)), 5.0f);
-                } else {
-                    float spacing = 3.0f;
-                    int numSegments = 20;
-                    float segmentWidth = (barSize.x - spacing * (numSegments - 1)) / numSegments;
-                    float barHeight = barSize.y;
-
-                    float t = ImGui::GetTime();
-                    float speed = 2.0f;
-                    float offset = fmod(t * speed, static_cast<float>(numSegments));
-
-                    for (int i = 0; i < numSegments; ++i) {
-                        float normIndex = (i + offset);
-                        float alpha = 1.0f - fabsf(fmodf(normIndex, numSegments) - numSegments / 2.0f) / (numSegments / 2.0f);
-                        alpha = std::clamp(alpha, 0.3f, 1.0f);
-
-                        ImVec2 segMin = ImVec2(barMin.x + i * (segmentWidth + spacing), barMin.y);
-                        ImVec2 segMax = ImVec2(segMin.x + segmentWidth, segMin.y + barHeight);
-                        drawList->AddRectFilled(segMin, segMax, ImGui::GetColorU32(ImVec4(0.2f, 0.7f, 1.0f, alpha)), 3.0f);
-                    }
-                }
-
-                std::string progressLabel = "Refreshing facial tracking data...";
-                ImVec2 textSize = ImGui::CalcTextSize(progressLabel.c_str());
-                ImVec2 textPos = ImVec2(center.x - textSize.x * 0.5f, barMin.y - textSize.y - 5.0f);
-                drawList->AddText(textPos, ImGui::GetColorU32(ImVec4(1, 1, 1, 1)), progressLabel.c_str());
-            }
         }
+        
         ImGui::EndChild();
 
         // Bottom Part: Timeline
