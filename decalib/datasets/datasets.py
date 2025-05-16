@@ -27,7 +27,9 @@ import scipy.io
 
 from . import detectors
 
-def video2sequence(video_path, sample_step=10):
+inputfolder = "E:\\Project\\DECA3\\DECA\\dynamic_input"
+
+def video2sequence0(video_path, sample_step=10):
     videofolder = os.path.splitext(video_path)[0]
     os.makedirs(videofolder, exist_ok=True)
     video_name = os.path.splitext(os.path.split(video_path)[-1])[0]
@@ -43,6 +45,30 @@ def video2sequence(video_path, sample_step=10):
         count += 1
         imagepath_list.append(imagepath)
     print('video frames are stored in {}'.format(videofolder))
+    return imagepath_list
+
+def video2sequence(video_path, sample_step=10):
+    # Extract video name without extension
+    video_name = os.path.splitext(os.path.basename(video_path))[0]
+
+    # Define folder where frames will be stored
+    videofolder = os.path.join(inputfolder, video_name)
+    os.makedirs(videofolder, exist_ok=True)
+
+    vidcap = cv2.VideoCapture(video_path)
+    success, image = vidcap.read()
+    count = 0
+    imagepath_list = []
+
+    while success:
+        #if count % sample_step == 0:
+        imagepath = os.path.join(videofolder, f'{video_name}_frame{count:04d}.jpg')
+        cv2.imwrite(imagepath, image)
+        imagepath_list.append(imagepath)
+        success, image = vidcap.read()
+        count += 1
+
+    print(f'Video frames are stored in {videofolder}')
     return imagepath_list
 
 class TestData(Dataset):

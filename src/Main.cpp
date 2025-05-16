@@ -29,7 +29,7 @@ using namespace std::chrono_literals;
 #include <windows.h>
 #include <algorithm>  // for std::clamp
 #include <filesystem>
-
+namespace fs = std::filesystem;
 
 typedef void (__cdecl *update_progress_t)(int, int);
 typedef int (__cdecl *get_progress_t)();
@@ -101,6 +101,9 @@ static std::vector<GLuint> sortedTrackingKeys;
 static std::map<std::string, GLuint> previewTextures;  // Store all preview textures
 static std::vector<GLuint> sortedPreviewKeys;
 
+//Configuring Working Directory
+void SetAppWorkingDirectory();
+
 //Updating Tracking Images
 void UpdateTexture(const std::string& FolderPath, std::map<std::string, GLuint> &Textures,std::vector<GLuint> &SortedKeys,std::string &LastFile);
 
@@ -108,7 +111,7 @@ void UpdateTexture(const std::string& FolderPath, std::map<std::string, GLuint> 
 GLuint LoadTextureFromFile(const char* filename);
 
 //Delete Tracking Images
-void DeleteAllTextures(std::map<std::string, GLuint> Textures, std::vector<GLuint> sortedKeys); 
+void DeleteAllTextures(std::map<std::string, GLuint>& Textures, std::vector<GLuint>& sortedKeys); 
 //----------------------------------------------------------------------------------------------
 
 //Running Face Reconstruction Task in Python
@@ -117,6 +120,7 @@ void runPythonConstruct(const std::string& selectedFilePath);
 
 int main()
 {
+    SetAppWorkingDirectory();
     ///Loading dll
     HMODULE dll = LoadLibraryW(L"progress_shared.dll");
     if (!dll) return 1;
@@ -260,10 +264,13 @@ int main()
                 if (shouldRunPython && !pythonThreadRunning) {
                     pythonThreadRunning = true;
                     std::string capturedPath = pendingPythonPath;
-
+                        
+                    update_progress(0,0);
                     //Delete Previous Cache
                     DeleteAllTextures(previewTextures, sortedPreviewKeys);
                     DeleteAllTextures(trackingTextures, sortedTrackingKeys);
+                    lastPreviewPath = "";
+                    lastTrackingPath = "";
                     try {
                         if (std::filesystem::exists(targetDir)) {
                             std::filesystem::remove_all(targetDir);
@@ -313,18 +320,19 @@ int main()
                 }
                 // ---------- Overlay Progress Bar ----------
                 if (shouldRunPython) {
-                    std::cout <<"Overlay block running!\n";
+                    //std::cout <<"Overlay block running!\n";
                     ImGui::SetNextWindowPos(ImVec2(0, 0));
                     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+                    ImGui::SetNextWindowBgAlpha(0.8f); // semi-transparent background
                     ImGui::Begin("Overlay", nullptr,
                         ImGuiWindowFlags_NoDecoration |
                         ImGuiWindowFlags_NoMove |
                         ImGuiWindowFlags_NoSavedSettings |
                         ImGuiWindowFlags_AlwaysAutoResize |
                         ImGuiWindowFlags_NoFocusOnAppearing |
-                        ImGuiWindowFlags_NoInputs |
+                        //ImGuiWindowFlags_NoInputs |
                         //ImGuiWindowFlags_NoBackground |
-                        ImGuiWindowFlags_NoBringToFrontOnFocus |
+                        //ImGuiWindowFlags_NoBringToFrontOnFocus |
                         ImGuiWindowFlags_NoNav);
                 
                     ImVec2 displaySize = ImGui::GetIO().DisplaySize;
@@ -482,6 +490,7 @@ void RenderFacialTrackingTab()
 
             std::cout << "[DEBUG] Last_selectedFilePath AFTER: " << Last_selectedFilePath << std::endl;
         }*/
+       
         hasShownNoFileInfo = false; // Reset the flag when a file is selected
         UpdateTexture(PreviewFolderPath, previewTextures, sortedPreviewKeys,lastPreviewPath);
         UpdateTexture(LandmarkFolderPath, trackingTextures, sortedTrackingKeys,lastTrackingPath);
@@ -505,7 +514,7 @@ void RenderFacialTrackingTab()
                 {
                     if (ImGui::BeginTabItem("Image Preview"))
                     {
-                        ImGui::Text("Image Preview Content");
+                        //ImGui::Text("Image Preview Content");
                         ImVec2 availableSize = ImGui::GetContentRegionAvail();
                         if (!selectedFilePath.empty() && !sortedPreviewKeys.empty()) {
                             double currentTime = ImGui::GetTime();
@@ -549,7 +558,7 @@ void RenderFacialTrackingTab()
                         if (!selectedFilePath.empty() && !sortedTrackingKeys.empty()) {
                             double currentTime = ImGui::GetTime();
                             if (currentTime - lastTime >= frameDuration) {
-                                currentFrameIndex = (currentFrameIndex + 1) % previewTextures.size();
+                                currentFrameIndex = (currentFrameIndex + 1) % trackingTextures.size();
                                 lastTime = currentTime;
                             }
                     
@@ -560,17 +569,17 @@ void RenderFacialTrackingTab()
                             ImGui::Image((ImTextureID)(intptr_t)texID, imageSize);
                     
                             // Debug output
-                            ImGui::Text("sortedTrackingKeys size: %d", (int)sortedTrackingKeys.size());
+                           /* ImGui::Text("sortedTrackingKeys size: %d", (int)sortedTrackingKeys.size());
                             ImGui::Text("Current frame index: %d", currentFrameIndex);
-                            ImGui::Text("texID (GLuint): %u", texID);
+                            ImGui::Text("texID (GLuint): %u", texID);*/
                         } else {
                             ImVec2 imagePos = ImGui::GetCursorScreenPos();
                             ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize);
                     
                             // Debug output
-                            ImGui::Text("No valid texture to show.");
+                            /*ImGui::Text("No valid texture to show.");
                             ImGui::Text("sortedTrackingKeys size: %d", (int)sortedTrackingKeys.size());
-                            ImGui::Text("selectedFilePath: %s", selectedFilePath.c_str());
+                            ImGui::Text("selectedFilePath: %s", selectedFilePath.c_str());*/
                         }
                     
                         ImGui::EndTabItem();
@@ -834,7 +843,7 @@ void UpdateTexture(const std::string& FolderPath, std::map<std::string, GLuint> 
     }
 }
 
-void DeleteAllTextures(std::map<std::string, GLuint> Textures, std::vector<GLuint> SortedKeys) {
+void DeleteAllTextures(std::map<std::string, GLuint>& Textures, std::vector<GLuint>& SortedKeys) {
     for (const auto& pair : Textures) {
         GLuint texID = pair.second;
         if (texID != 0) {
@@ -846,3 +855,23 @@ void DeleteAllTextures(std::map<std::string, GLuint> Textures, std::vector<GLuin
     SortedKeys.clear();
 }
 
+void SetAppWorkingDirectory()
+{
+    // Get current working directory
+    fs::path cwd = fs::current_path();
+    std::cout << "[INFO] Current working directory: " << cwd << std::endl;
+
+    // Check if we're running from the "build/bin/Release" path
+    if (cwd.filename() == "Release" && cwd.parent_path().filename() == "bin") {
+        // We're likely running from the .exe
+        // Calculate project root: cwd = DECA/build/bin/Release → project = DECA
+        fs::path projectRoot = cwd.parent_path().parent_path().parent_path();
+        std::cout << "[INFO] Switching working directory to: " << projectRoot << std::endl;
+
+        if (!SetCurrentDirectoryA(projectRoot.string().c_str())) {
+            std::cerr << "[ERROR] Failed to set working directory to " << projectRoot << std::endl;
+        }
+    } else {
+        std::cout << "[INFO] Running from VS Code or already in project root. No directory change needed." << std::endl;
+    }
+}

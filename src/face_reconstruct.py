@@ -6,7 +6,6 @@ import mybridge
 #progress = mybridge.create_progress()
 #mybridge.set_global_progress(progress)
 
-
 import cv2
 import numpy as np
 import time
@@ -32,8 +31,8 @@ dll = ctypes.WinDLL("progress_shared.dll")
 
 # Call update_progress
 progress.update_progress.argtypes = [ctypes.c_int, ctypes.c_int]
-progress.update_progress(7, 15)
-print("[Python] update_progress(7, 15) called")
+#progress.update_progress(7, 15)
+#print("[Python] update_progress(7, 15) called")
 
 progress_lib = cdll.LoadLibrary("build/bin/Release/progress_shared.dll")
 progress_lib.update_progress.argtypes = [ctypes.c_int, ctypes.c_int]
@@ -44,9 +43,6 @@ progress_lib.get_total_progress.restype = ctypes.c_int
 
 # Wait for C++ app to check
 time.sleep(5)
-
-print("[Python] update_progress(7, 15) called")
-
 
 path_to_check = 'E:\\Project\\DECA3\\DECA\\build\\bin\\Release'
 is_in_path = path_to_check in sys.path
@@ -104,8 +100,8 @@ def main(args):
                 _, orig_visdict = deca.decode(codedict, render_orig=True, original_image=original_image, tform=tform)    
                 orig_visdict['inputs'] = original_image 
 
-            if args.saveDepth or args.saveKpt or args.saveObj or args.saveMat or args.saveImages:
-                os.makedirs(os.path.join(savefolder, name), exist_ok=True)
+            #if args.saveDepth or args.saveKpt or args.saveObj or args.saveMat or args.saveImages:
+                #os.makedirs(os.path.join(savefolder, name), exist_ok=True)
             # -- save results
             if args.saveDepth:
                 depth_image = deca.render.render_depth(opdict['trans_verts']).repeat(1, 3, 1, 1)
@@ -151,24 +147,27 @@ def main(args):
                     if vis_name not in visdict.keys():
                         continue
 
-                    # Define folder path for each image type
+                    # Save normal render
                     vis_folder = os.path.join(savefolder, inputname, vis_name)
                     os.makedirs(vis_folder, exist_ok=True)
 
-                    # Save normal image
                     image = util.tensor2image(visdict[vis_name][0])
                     cv2.imwrite(os.path.join(vis_folder, f'{name}_{vis_name}.jpg'), image)
 
-                    # If original render is enabled, save it in the same subfolder
+                    # Save original render in separate folder if enabled
                     if args.render_orig:
+                        orig_folder = os.path.join(savefolder, inputname, "original", vis_name)
+                        os.makedirs(orig_folder, exist_ok=True)
+
                         orig_image = util.tensor2image(orig_visdict[vis_name][0])
-                        cv2.imwrite(os.path.join(vis_folder, f'orig_{name}_{vis_name}.jpg'), orig_image)
+                        cv2.imwrite(os.path.join(orig_folder, f'{name}_{vis_name}.jpg'), orig_image)
+
         set_progress(len(testdata), i+1)
         print(f"Python Progress: {progress_status['done']} / {progress_status['total']}")
         #progress.update(i+1, len(testdata)) 
         mybridge.update_progress(i+1, len(testdata))
-        progress_lib.update_progress(i+1, len(testdata))
-        dll.update_progress(i+1, len(testdata))
+        #progress_lib.update_progress(i+1, len(testdata))
+        #dll.update_progress(i+1, len(testdata))
 
     print(f'-- please check the results in {savefolder}')
         
