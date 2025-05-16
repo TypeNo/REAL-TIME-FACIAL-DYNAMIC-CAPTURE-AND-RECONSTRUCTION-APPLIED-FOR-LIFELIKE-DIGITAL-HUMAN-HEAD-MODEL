@@ -107,6 +107,7 @@ static std::vector<GLuint> sortedTrackingKeys;
 static std::map<std::string, GLuint> previewTextures;  // Store all preview textures
 static std::vector<GLuint> sortedPreviewKeys;
 
+
 //Configuring Working Directory
 void SetAppWorkingDirectory();
 
@@ -291,7 +292,7 @@ int main()
                     pythonThreadRunning = true;
                     std::string capturedPath = pendingPythonPath;
                         
-                    update_progress(0,0);
+                    
                     //Delete Previous Cache
                     DeleteAllTextures(previewTextures, sortedPreviewKeys);
                     DeleteAllTextures(trackingTextures, sortedTrackingKeys);
@@ -655,7 +656,7 @@ void RenderFacialTrackingTab()
                 shouldRunPython = true;
                 pendingPythonPath = selectedFilePath;
                 std::cout << "[INFO] Selected file path: " << selectedFilePath << std::endl;
-
+                update_progress(0,0);
                 std::filesystem::path selectedPath(selectedFilePath);
                 std::string filename = selectedPath.stem().string();
                 //Setting up directory for selected file
@@ -887,114 +888,127 @@ void SetAppWorkingDirectory()
     }
 }
 
-bool TimelineWidget(const char* label, size_t& currentFrameIndex, size_t totalFrames, bool& autoPlay) {
-    ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bool& autoPlay) {
+    // --- Constants ---
+    const float controlsH     = 28.0f;  // space for buttons above
+    const float headerH       = 18.0f;
+    const float trackH        = 60.0f;
+    float availableH = ImGui::GetContentRegionAvail().y;
+    float widgetH = availableH;
+    const ImU32 bgHeaderCol   = IM_COL32(60, 60, 60, 255);
+    const ImU32 bgTrackCol    = IM_COL32(32, 32, 32, 255);
+    const ImU32 borderCol     = IM_COL32(90, 90, 90, 255);
+    const ImU32 tickMajorCol  = IM_COL32(140, 140, 140, 180);
+    const ImU32 tickMinorCol  = IM_COL32(90, 90, 90, 140);
+    const ImU32 keyframeCol   = IM_COL32(255, 150, 20, 255);
+    const ImU32 playheadCol   = IM_COL32(50, 255, 50, 255);
+    const float keyDiamondR   = 5.0f;
+    const float majorTickH    = 12.0f;
+    const float minorTickH    = 6.0f;
 
-    // === Config ===
-    float timelineHeight = 80.0f;
-    float tickMajorHeight = 20.0f;
-    float tickMinorHeight = 10.0f;
-    float keyframeRadius = 4.0f;
+    // --- Layout ---
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 startPos = ImGui::GetCursorScreenPos();
+    ImVec2 fullSize = ImVec2(ImGui::GetContentRegionAvail().x, widgetH);
 
-    // === Layout ===
-    ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
-    ImVec2 canvas_size = ImVec2(ImGui::GetContentRegionAvail().x, timelineHeight);
-    std::size_t max_frames = std::max(totalFrames, std::size_t(1));
-    float frame_width = canvas_size.x / static_cast<float>(max_frames);
-    float timeline_y = canvas_pos.y + canvas_size.y * 0.5f;
+    // Play controls above timeline, centered
+    ImVec2 controlSize(120, controlsH);
+    ImVec2 controlPos = ImVec2(startPos.x + (fullSize.x - controlSize.x) * 0.5f, startPos.y);
+    ImGui::SetCursorScreenPos(controlPos);
 
-    // === Background Box ===
-    draw_list->AddRectFilled(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), IM_COL32(30, 30, 30, 255), 6.0f);
-    draw_list->AddRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), IM_COL32(100, 100, 100, 255), 6.0f, 0, 2.0f);
+    ImGui::BeginGroup();
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);  // Rounded button
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 4));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 4));
+    if (ImGui::Button(autoPlay ? "Pause##tl" : "Play##tl", ImVec2(60, 0)))
+        autoPlay = !autoPlay;
+    ImGui::SameLine();
+    char frameLabel[64];
+    snprintf(frameLabel, sizeof(frameLabel), " %zu / %zu ", currentFrame, totalFrames ? totalFrames - 1 : 0);
+    
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(40, 40, 40, 255));
+    ImGui::PushStyleColor(ImGuiCol_Border,  IM_COL32(80, 80, 80, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,   4.0f);
+    ImGui::PushItemWidth(100.0f);
+    
+    ImGui::BeginDisabled(); // disable interaction
+    ImGui::InputText("##frame_display", frameLabel, IM_ARRAYSIZE(frameLabel), ImGuiInputTextFlags_ReadOnly);
+    ImGui::EndDisabled();
+    
+    ImGui::PopItemWidth();
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor(2);
+    
+    ImGui::PopStyleVar(3);
+    ImGui::EndGroup();
 
-    // === Tick Marks ===
-    for (size_t i = 0; i < totalFrames; ++i) {
-        float x = canvas_pos.x + i * frame_width;
-        bool major = (i % 10 == 0);
-        float height = major ? tickMajorHeight : tickMinorHeight;
-        ImU32 color = major ? IM_COL32(180, 180, 180, 180) : IM_COL32(120, 120, 120, 100);
-        draw_list->AddLine(ImVec2(x, timeline_y - height / 2), ImVec2(x, timeline_y + height / 2), color);
+    // Leave space before drawing timeline
+    ImGui::SetCursorScreenPos(ImVec2(startPos.x, startPos.y + controlsH));
+    ImVec2 timelinePos = ImGui::GetCursorScreenPos();
 
-        /*if (i % 20 == 0) {
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%lu", i);
-            draw_list->AddText(ImVec2(x + 2, timeline_y + 12), IM_COL32(220, 220, 220, 200), buf);
-        }*/
-        
+    size_t framesMax = totalFrames ? totalFrames : 1;
+    float pxPerFrame = fullSize.x / static_cast<float>(framesMax);
 
-        char buf[16];
-        snprintf(buf, sizeof(buf), "%lu", i);
-        draw_list->AddText(ImVec2(x + 2, timeline_y + 12), IM_COL32(220, 220, 220, 200), buf);
-        
-    }
+    // --- Background ---
+    dl->AddRectFilled(timelinePos, ImVec2(timelinePos.x + fullSize.x, timelinePos.y + headerH), bgHeaderCol, 4.0f, ImDrawFlags_RoundCornersTop);
+    dl->AddRectFilled(ImVec2(timelinePos.x, timelinePos.y + headerH),
+                      ImVec2(timelinePos.x + fullSize.x, timelinePos.y + fullSize.y - controlsH), bgTrackCol);
+    dl->AddRect(timelinePos, ImVec2(timelinePos.x + fullSize.x, timelinePos.y + fullSize.y - controlsH), borderCol, 4.0f, 0, 1.5f);
 
-    // === Sample Keyframes Every 30 ===
-    /*for (size_t i = 0; i < totalFrames; i += 30) {
-        float x = canvas_pos.x + i * frame_width;
-        draw_list->AddCircleFilled(ImVec2(x, timeline_y - 18), keyframeRadius, IM_COL32(255, 215, 0, 255));
-    }*/
+    // --- Ticks ---
+    float baseY = timelinePos.y + headerH;
+    for (size_t f = 0; f < totalFrames; ++f) {
+        float x = timelinePos.x + f * pxPerFrame;
+        bool major = (f % 10 == 0);
+        bool minor = (f % 5 == 0);
 
-    // === Playhead ===
-    /*float playhead_x = canvas_pos.x + currentFrameIndex * frame_width;
-    draw_list->AddLine(ImVec2(playhead_x, canvas_pos.y), ImVec2(playhead_x, canvas_pos.y + canvas_size.y),
-                       IM_COL32(255, 50, 50, 255), 2.5f);
-    draw_list->AddTriangleFilled(
-        ImVec2(playhead_x, canvas_pos.y - 6),
-        ImVec2(playhead_x - 5, canvas_pos.y),
-        ImVec2(playhead_x + 5, canvas_pos.y),
-        IM_COL32(255, 50, 50, 255)
-    );*/
-    // === Playhead ===
-    float playhead_x = canvas_pos.x + currentFrameIndex * frame_width;
-    draw_list->AddLine(ImVec2(playhead_x, canvas_pos.y), ImVec2(playhead_x, canvas_pos.y + canvas_size.y),
-                    IM_COL32(220, 180, 40, 255) // Soft Gold
-                    , 2.5f); // Gold line
+        if (major || minor) {
+            float h = major ? majorTickH : minorTickH;
+            dl->AddLine(ImVec2(x, baseY - h), ImVec2(x, baseY), major ? tickMajorCol : tickMinorCol);
+        }
 
-    // Replace triangle with a gold circle at the top
-    draw_list->AddCircleFilled(
-        ImVec2(playhead_x, canvas_pos.y - 5),  // Position: just above the timeline
-        5.0f,                                  // Radius of the circle
-        IM_COL32(255, 215, 0, 255)             // Gold color (RGB: 255, 215, 0)
-    );
-
-
-    // === Mouse Interaction ===
-    ImGui::InvisibleButton(label, canvas_size);
-    bool is_active = ImGui::IsItemActive();
-    bool is_hovered = ImGui::IsItemHovered();
-
-    if (is_active) {
-        ImVec2 mouse_pos = io.MousePos;
-        size_t newFrame = static_cast<size_t>((mouse_pos.x - canvas_pos.x) / frame_width);
-        if (newFrame < totalFrames) {
-            currentFrameIndex = newFrame;
+        if (major) {
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%zu", f);
+            dl->AddText(ImVec2(x + 2, timelinePos.y + 2), IM_COL32(220, 220, 220, 200), buf);
         }
     }
 
-    if (is_hovered) {
+    // --- Keyframes ---
+    for (size_t f = 0; f < totalFrames; f += 15) {
+        float cx = timelinePos.x + f * pxPerFrame;
+        float cy = baseY + trackH * 0.5f;
+        dl->AddQuadFilled(
+            ImVec2(cx,             cy - keyDiamondR),
+            ImVec2(cx + keyDiamondR, cy),
+            ImVec2(cx,             cy + keyDiamondR),
+            ImVec2(cx - keyDiamondR, cy),
+            keyframeCol);
+    }
+
+    // --- Playhead ---
+    float headX = timelinePos.x + currentFrame * pxPerFrame;
+    dl->AddLine(ImVec2(headX, timelinePos.y), ImVec2(headX, timelinePos.y + widgetH - controlsH), playheadCol, 2.0f);
+    dl->AddTriangleFilled(
+        ImVec2(headX,             timelinePos.y - 6.0f),
+        ImVec2(headX - 5.0f,      timelinePos.y),
+        ImVec2(headX + 5.0f,      timelinePos.y),
+        playheadCol);
+
+    // --- Interaction ---
+    ImGui::InvisibleButton(id, ImVec2(fullSize.x, headerH + trackH));
+    if (ImGui::IsItemActive()) {
+        float mouseX = ImGui::GetIO().MousePos.x;
+        size_t newFrame = static_cast<size_t>((mouseX - timelinePos.x) / pxPerFrame);
+        if (newFrame < totalFrames) currentFrame = newFrame;
+    }
+
+    if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Click to scrub timeline");
-    }
 
-    // === Playback Control Section ===
-    ImGui::Spacing();
-    ImGui::Separator();
-
-    ImGui::BeginGroup();
-    if (ImGui::Button(autoPlay ? "Pause" : "Play", ImVec2(60, 0))) {
-        autoPlay = !autoPlay;
-    }
-    ImGui::SameLine();
-    ImGui::Text("Frame: %zu / %zu", currentFrameIndex, totalFrames - 1);
-    ImGui::EndGroup();
-
-    // === Optional: Playback Speed Control ===
-    // static float playbackSpeed = 1.0f;
-    // ImGui::SameLine();
-    // ImGui::SetNextItemWidth(100.0f);
-    // ImGui::SliderFloat("Speed", &playbackSpeed, 0.1f, 3.0f, "%.1fx");
-
-    return true;
+    return ImGui::IsItemHovered() || ImGui::IsItemActive();
 }
+
 
 
