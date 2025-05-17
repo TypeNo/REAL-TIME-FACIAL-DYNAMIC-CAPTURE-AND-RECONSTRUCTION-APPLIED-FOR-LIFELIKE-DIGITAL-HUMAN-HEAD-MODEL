@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "bin/Release/FYP.exe"
+			"path" : "bin/RelWithDebInfo/FYP.exe"
 		},
 		{
-			"path" : "bin/Release/FYP.pdb"
+			"path" : "bin/RelWithDebInfo/FYP.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -59,7 +59,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD"
+					"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++17 -MD"
 				}
 			],
 			"defines" : 
@@ -118,15 +118,15 @@
 	"dependencies" : 
 	[
 		{
-			"backtrace" : 3,
-			"id" : "IGFD::@6890427a1f51a3e7e1df"
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 3,
 			"id" : "imgui::@6890427a1f51a3e7e1df"
 		},
 		{
-			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+			"backtrace" : 3,
+			"id" : "IGFD::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "FYP::@6890427a1f51a3e7e1df",
@@ -135,11 +135,11 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /O2 /Ob2 /DNDEBUG -MD",
+				"fragment" : "/DWIN32 /D_WINDOWS /GR /EHsc /Zi /O2 /Ob1 /DNDEBUG -MD",
 				"role" : "flags"
 			},
 			{
-				"fragment" : "/machine:x64 /INCREMENTAL:NO /subsystem:console",
+				"fragment" : "/machine:x64 /debug /INCREMENTAL /subsystem:console",
 				"role" : "flags"
 			},
 			{
@@ -149,17 +149,17 @@
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "Release\\imgui.lib",
+				"fragment" : "RelWithDebInfo\\imgui.lib",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "E:\\Project\\DECA3\\DECA\\vcpkg_installed\\x64-windows\\lib\\glfw3dll.lib",
+				"fragment" : "E:\\Project\\DECA3\\DECA\\vcpkg_installed\\x64-windows\\debug\\lib\\glfw3dll.lib",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "Release\\IGFD.lib",
+				"fragment" : "RelWithDebInfo\\IGFD.lib",
 				"role" : "libraries"
 			},
 			{

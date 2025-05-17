@@ -38,10 +38,12 @@ typedef int (__cdecl *get_progress_t)();
 typedef int (*GetProgressFunc)();
 
 // Global or class-level flag and thread
-std::thread pythonThread;
+std::thread pythonThread;// Face_reconstruction thread
 std::atomic<bool> shouldRunPython(false);
 std::string pendingPythonPath;
-bool pythonThreadRunning = false;
+bool pythonThreadRunning = false; 
+std::thread       g_TextureThread;//Textures_loading thread
+std::atomic<bool> textureUpdateRequested(false);
 
 // Global variables for progress
 static bool hasShownNoFileInfo = false;
@@ -81,9 +83,13 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-//Functions
-//GUI of Facial Tracking
+//=====================Functions==========================
+//Interface Rendering---------------------------------------------------------------------------
+//GUI of Facial Tracking-----
 void RenderFacialTrackingTab();
+//GUI of Facial Reconstruction
+void RenderFacialReconstructionTab();
+void DrawModelView();
 
 //IMGUI Texture Rendering------------------------------------------------------------------------
 //Frames Playback-----
@@ -185,6 +191,9 @@ int main()
             glfwTerminate();
             return -1;
         }
+        // Create shared window for the background pipeline
+        GLFWwindow* sharedWindow = glfwCreateWindow(1, 1, "", nullptr, window);
+        // Keep it hidden, never show it
 
         HWND hwnd = glfwGetWin32Window(window);
         EnableDarkTitleBar(hwnd);
@@ -233,6 +242,30 @@ int main()
             py::gil_scoped_release release; // This releases the GIL for this scope   
             glfwPollEvents();
 
+            // Updating Textures
+            if (!selectedFilePath.empty()) {
+                hasShownNoFileInfo = false; // Reset the flag when a file is selected
+                if(!textureUpdateRequested){
+                    textureUpdateRequested = true;
+                    g_TextureThread = std::thread([&]() {
+                        glfwMakeContextCurrent(sharedWindow); // now it's visible here
+                        // Only do the folder‐scanning / texture‐loading here.
+                        UpdateTexture(PreviewFolderPath,  previewTextures,  sortedPreviewKeys,  lastPreviewPath);
+                        UpdateTexture(LandmarkFolderPath, trackingTextures, sortedTrackingKeys, lastTrackingPath);
+                        glfwMakeContextCurrent(nullptr);
+                        textureUpdateRequested = false;
+                    });
+                    g_TextureThread.detach();
+                }
+                
+                //UpdateTexture(PreviewFolderPath, previewTextures, sortedPreviewKeys,lastPreviewPath);
+                //UpdateTexture(LandmarkFolderPath, trackingTextures, sortedTrackingKeys,lastTrackingPath);
+
+            } else if (!hasShownNoFileInfo) {
+                std::cout << "[INFO] No file selected. Using default black texture." << std::endl;
+                hasShownNoFileInfo = true;
+            }
+
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
@@ -268,7 +301,8 @@ int main()
 
                         if (ImGui::BeginTabItem("Facial Reconstruction"))
                         {
-                            ImGui::Text("Facial Capture content goes here...");
+                            //ImGui::Text("Facial Capture content goes here...");
+                            RenderFacialReconstructionTab();
                             ImGui::EndTabItem();
                         }
 
@@ -351,6 +385,7 @@ int main()
                     ImGui::SetNextWindowPos(ImVec2(0, 0));
                     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
                     ImGui::SetNextWindowBgAlpha(0.8f); // semi-transparent background
+                    ImGui::SetNextWindowFocus();
                     ImGui::Begin("Overlay", nullptr,
                         ImGuiWindowFlags_NoDecoration |
                         ImGuiWindowFlags_NoMove |
@@ -496,20 +531,7 @@ void RenderFacialTrackingTab()
         std::cout << "[INFO] Default texture ID: " << defaultTexture << std::endl;
     }
 
-     //---------------------------------------------------------------------------------------
-
-
-    // Setting the Path of outputs and input
-    if (!selectedFilePath.empty()) {
-        hasShownNoFileInfo = false; // Reset the flag when a file is selected
-        UpdateTexture(PreviewFolderPath, previewTextures, sortedPreviewKeys,lastPreviewPath);
-        UpdateTexture(LandmarkFolderPath, trackingTextures, sortedTrackingKeys,lastTrackingPath);
-        
-    } else if (!hasShownNoFileInfo) {
-        std::cout << "[INFO] No file selected. Using default black texture." << std::endl;
-        hasShownNoFileInfo = true;
-    }
-
+    //---------------------------------------------------------------------------------------
     // Split vertically: Left big panel + Right control panel
     ImGui::BeginChild("LeftSection", ImVec2(ImGui::GetContentRegionAvail().x * 0.7f, 0), false);
     {
@@ -1010,5 +1032,18 @@ bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bo
     return ImGui::IsItemHovered() || ImGui::IsItemActive();
 }
 
+void RenderFacialReconstructionTab(){
+    ImGui:: Columns(2, nullptr, true);
+    ImGui::Text("Model Preview content goes here...");
+    DrawModelView();
+    ImGui::NextColumn();
+    ImGui::Text("Manager Tabs content goes here...");
+    ImGui::Columns(1);
+}
 
+void DrawModelView() {
+    ImGui::Begin("Model Preview");
+    ImGui::Text("[3D Model View Goes Here]"); // Placeholder for OpenGL rendering
+    ImGui::End();
+}
 
