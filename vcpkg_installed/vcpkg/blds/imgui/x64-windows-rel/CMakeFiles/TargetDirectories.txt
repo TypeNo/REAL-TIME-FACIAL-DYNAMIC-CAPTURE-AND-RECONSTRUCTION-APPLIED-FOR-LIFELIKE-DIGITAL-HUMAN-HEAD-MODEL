@@ -1,6 +1,0 @@
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/imgui/x64-windows-rel/CMakeFiles/imgui.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/imgui/x64-windows-rel/CMakeFiles/edit_cache.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/imgui/x64-windows-rel/CMakeFiles/rebuild_cache.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/imgui/x64-windows-rel/CMakeFiles/list_install_components.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/imgui/x64-windows-rel/CMakeFiles/install.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/imgui/x64-windows-rel/CMakeFiles/install/local.dir

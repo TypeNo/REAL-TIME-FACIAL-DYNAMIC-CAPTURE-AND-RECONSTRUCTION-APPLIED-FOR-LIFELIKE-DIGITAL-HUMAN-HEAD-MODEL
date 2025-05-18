@@ -1,4 +1,0 @@
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/imgui_x64-windows/debug/lib/imguid.lib
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/imgui_x64-windows/debug/share/imgui/imgui-config.cmake
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/imgui_x64-windows/debug/share/imgui/imgui-targets.cmake
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/imgui_x64-windows/debug/share/imgui/imgui-targets-debug.cmake

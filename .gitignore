@@ -25,7 +25,7 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-.vscode
+#.vscode
 
 # 3D data #
 ############
@@ -46,4 +46,44 @@ __pycache__
 ## internal use
 cluster_scripts
 internal
+
 *TestSamples*
+
+# Build artifacts
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.sln
+*.vcxproj*
+*.user
+*.obj
+*.exe
+*.dll
+*.lib
+*.out
+*.so
+*.a
+
+# Debug files
+*.pdb
+*.ilk
+
+# vcpkg (local)
+vcpkg_installed/
+.vcpkg-root
+CMakeUserPresets.json
+CMakePresets.json
+
+# IDE/workspace files
+*.user
+*.userosscache
+*.suo
+*.ncb
+*.log
+
+
+#output & input
+*output*
+*dynamic_input*

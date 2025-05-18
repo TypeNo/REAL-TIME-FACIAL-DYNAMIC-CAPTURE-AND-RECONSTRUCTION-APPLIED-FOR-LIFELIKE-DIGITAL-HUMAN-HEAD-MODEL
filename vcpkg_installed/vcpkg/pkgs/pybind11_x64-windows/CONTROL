@@ -1,7 +1,0 @@
-Package: pybind11
-Version: 2.11.1
-Depends: vcpkg-cmake, vcpkg-cmake-config
-Architecture: x64-windows
-Multi-Arch: same
-Abi: 9eb479120a42d5054e45c7ae1ea631d6b1c4709ca2d45aa742fa8eae676bd1e2
-Description: pybind11 is a lightweight header-only library that exposes C++ types in Python and vice versa, mainly to create Python bindings of existing C++ code

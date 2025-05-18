@@ -1,25 +1,9 @@
 #define NOMINMAX
 
+//UNIVERSAL PACKAGE
 #include <iostream>
-#include <filesystem>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-#include <windows.h>
-#include <dwmapi.h>
-#pragma comment(lib, "Dwmapi.lib")
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#include "ImGuiFileDialog.h"
 #include <cstdlib>
 #include <string>
-#include <pybind11/embed.h> // Everything needed for embedding
-#include <Python.h>
-namespace py = pybind11;
 #include <thread>
 #include <atomic>
 using namespace std::chrono_literals;
@@ -27,10 +11,36 @@ using namespace std::chrono_literals;
 //#include "progress.hpp"
 #include <sstream> // for std::stringstream
 #include <cmath> // For sin() and M_PI
-#include "progress_shared.hpp"
-#include <windows.h>
 #include <algorithm>  // for std::clamp
+//FILE MANAGEMENT
 #include <filesystem>
+//WINDOWS PLATFORM DEV
+#include <windows.h>
+#include <dwmapi.h>
+#pragma comment(lib, "Dwmapi.lib")
+//OPENGL SERIES
+//#include <GL/glew.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#include "ImGuiFileDialog.h"
+//PYTHON INTERPRETER
+#include <pybind11/embed.h> // Everything needed for embedding
+#include <Python.h>
+namespace py = pybind11;
+//INCLUDED HEADER
+#include "progress_shared.hpp"
+#include "Model.hpp"
+#include "Shader.hpp"
+#include "Camera.hpp"
+
+
 namespace fs = std::filesystem;
 
 typedef void (__cdecl *update_progress_t)(int, int);
@@ -56,6 +66,14 @@ std::string progressLabel = "Waiting...";
 // Global variables for playback control
 static bool autoPlay = true;
 static bool isDragging = false;
+
+//Global variable for ModelView
+Camera camera;
+bool mouseDragging = false;
+float lastX = 0, lastY = 0;
+GLuint fbo, colorTex, depthRb;
+Shader shader;
+Model model;
 
 //Default Input Dir
 std::string GetDesktopPath() {
@@ -90,6 +108,7 @@ void RenderFacialTrackingTab();
 //GUI of Facial Reconstruction
 void RenderFacialReconstructionTab();
 void DrawModelView();
+void InitFramebuffer(int width, int height);
 
 //IMGUI Texture Rendering------------------------------------------------------------------------
 //Frames Playback-----
@@ -165,9 +184,10 @@ int main()
         int height = 1080;
 
         // Decide GL+GLSL versions
-        const char* glsl_version = "#version 130";
+        const char* glsl_version = "#version 330";
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         // Get primary monitor and its video mode
         GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -206,6 +226,8 @@ int main()
         glfwShowWindow(window);
         
         glfwMakeContextCurrent(window);
+        gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+        glEnable(GL_DEPTH_TEST);
         glfwSwapInterval(1); // Enable vsync
 
         // Set dark background color
@@ -220,8 +242,6 @@ int main()
 
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init(glsl_version);
-
-
 
         // Main loop
         while (!glfwWindowShouldClose(window))
@@ -270,6 +290,7 @@ int main()
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            
             // Your main UI
             {
                 // Before ImGui::Begin()
@@ -1042,8 +1063,78 @@ void RenderFacialReconstructionTab(){
 }
 
 void DrawModelView() {
+    ImGuiIO& io = ImGui::GetIO();  // just get the global instance again
     ImGui::Begin("Model Preview");
-    ImGui::Text("[3D Model View Goes Here]"); // Placeholder for OpenGL rendering
+
+    ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+    static int fbWidth = 0, fbHeight = 0;
+    if ((int)viewportSize.x != fbWidth || (int)viewportSize.y != fbHeight) {
+        fbWidth = (int)viewportSize.x;
+        fbHeight = (int)viewportSize.y;
+        InitFramebuffer(fbWidth, fbHeight); // Resize FBO
+    }
+
+    // -- Render to FBO --
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glViewport(0, 0, fbWidth, fbHeight);
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)fbWidth / fbHeight, 0.1f, 100.0f);
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    model = Model("output_animation.glb");
+
+    shader.use();
+    shader.setMat4("model", modelMatrix);
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
+    shader.setVec3("lightDir", glm::vec3(-1, -1, -1));
+    shader.setVec3("lightColor", glm::vec3(1.0f));
+    shader.setVec3("objectColor", glm::vec3(1.0f, 0.8f, 0.7f));
+    shader.setVec3("viewPos", camera.Position);
+
+    model.Draw();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // -- Display in ImGui --
+    ImGui::Image((ImTextureID)(intptr_t)colorTex, viewportSize, ImVec2(0, 1), ImVec2(1, 0)); // Flip vertically
+
+    // Mouse controls
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        ImVec2 delta = ImGui::GetMouseDragDelta();
+        camera.ProcessMouseMovement(delta.x, delta.y);
+        ImGui::ResetMouseDragDelta();
+    }
+    camera.ProcessMouseScroll(io.MouseWheel);
+
     ImGui::End();
 }
 
+
+void InitFramebuffer(int width, int height) {
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    // Create color texture
+    glGenTextures(1, &colorTex);
+    glBindTexture(GL_TEXTURE_2D, colorTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex, 0);
+
+    // Create depth renderbuffer
+    glGenRenderbuffers(1, &depthRb);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRb);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthRb);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cerr << "Framebuffer is not complete!" << std::endl;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}

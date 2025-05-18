@@ -1,7 +1,0 @@
-prefix=E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/pkgs/pybind11_x64-windows/debug
-includedir=${prefix}/include
-
-Name: pybind11
-Description: Seamless operability between C++11 and Python
-Version: 2.11.1
-Cflags: -I${includedir}

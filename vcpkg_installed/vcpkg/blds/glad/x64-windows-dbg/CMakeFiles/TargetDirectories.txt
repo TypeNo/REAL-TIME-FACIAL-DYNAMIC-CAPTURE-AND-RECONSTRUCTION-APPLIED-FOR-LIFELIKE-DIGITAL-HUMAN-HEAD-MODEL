@@ -1,7 +1,0 @@
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-dbg/CMakeFiles/glad-generate-files.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-dbg/CMakeFiles/glad.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-dbg/CMakeFiles/edit_cache.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-dbg/CMakeFiles/rebuild_cache.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-dbg/CMakeFiles/list_install_components.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-dbg/CMakeFiles/install.dir
-E:/Project/DECA3/DECA/vcpkg_installed/vcpkg/blds/glad/x64-windows-dbg/CMakeFiles/install/local.dir
