@@ -57,7 +57,7 @@ std::thread g_TextureThread;//Textures_loading thread
 std::atomic<bool> textureUpdateRequested(false);
 // Global atomic status variable to track progress inside the thread
 std::atomic<int> g_TextureThreadProgress(0);
-std::atomic<bool> g_TextureThreadRunning(false);
+//std::atomic<bool> g_TextureThreadRunning(false);
 // Static or global variable to remember last printed progress
 static int lastPrintedProgress = -1;
 static int frameCount = 0; // Keeps track of how many frames have passed
@@ -122,6 +122,8 @@ void InitFramebuffer(int width, int height);
 float playbackFPS = 30.0f;            // Target playback rate
 static size_t currentFrameIndex = 0;
 static double frameDuration = 1.0 / playbackFPS;
+static double lastTime = 0.0;
+
 //--------------------
 //Input Directory Configuration-----
 static std::string selectedFilePath="";
@@ -266,12 +268,6 @@ int main()
                 total = get_total_progress();
             }
 
-            if (cur != prevCur || total != prevTotal) {
-                std::cout << "C++ Progress: " << cur << " / " << total << std::endl;
-                prevCur = cur;
-                prevTotal = total;
-            }
-
             py::gil_scoped_release release; // This releases the GIL for this scope   
             glfwPollEvents();
 
@@ -279,15 +275,16 @@ int main()
             //std::cout << "\n========== Frame: " << frameCount << " ==========" << std::endl;
             
             // Updating Textures
-            if (!selectedFilePath.empty()) {
+            if (shouldRunPython && cur!= prevCur) {
                 hasShownNoFileInfo = false;
             
                 //std::cout << "[DEBUG] Frame " << frameCount << " | textureUpdateRequested: " << textureUpdateRequested << "\n";
                 //std::cout << "[DEBUG] Frame " << frameCount << " | g_TextureThreadRunning: " << g_TextureThreadRunning << "\n";
+                std::cout << "[DEBUG] TextureUpdateFrame "  << frameCount << "\n";
             
                 if (!textureUpdateRequested) {
                     textureUpdateRequested = true;
-                    g_TextureThreadRunning = true;
+                    //g_TextureThreadRunning = true;
             
                     //std::cout << "[DEBUG] Frame " << frameCount << " | Starting texture thread...\n";
                     static int threadframeCount = 0; // Keeps track of how many frames have passed
@@ -315,7 +312,7 @@ int main()
                         //std::cout << "[DEBUG THREAD] (Frame " << threadframeCount  << ") Texture loading finished.\n";
             
                         textureUpdateRequested = false;
-                        g_TextureThreadRunning = false;
+                        //g_TextureThreadRunning = false;
             
                         //std::cout << "[DEBUG THREAD] (Frame " << threadframeCount  << ") Thread flags reset\n";
                         threadframeCount++;
@@ -324,6 +321,12 @@ int main()
             
                     g_TextureThread.detach();
                 }
+
+                if(cur == total){
+                    shouldRunPython = false;
+                }
+
+
             
                 /*if (g_TextureThreadRunning) {
                     int progress = g_TextureThreadProgress.load();
@@ -348,6 +351,12 @@ int main()
             } else if (!hasShownNoFileInfo) {
                 std::cout << "[INFO] No file selected. Using default black texture." << std::endl;
                 hasShownNoFileInfo = true;
+            }
+
+            if (cur != prevCur || total != prevTotal) {
+                std::cout << "C++ Progress: " << cur << " / " << total << std::endl;
+                prevCur = cur;
+                prevTotal = total;
             }
             
             
@@ -459,7 +468,7 @@ int main()
                         }
                         
                         pythonThreadRunning = false;
-                        shouldRunPython = false;
+                        //shouldRunPython = false;
                     });
                 
                     pythonThread.detach();
@@ -562,7 +571,7 @@ void RenderFacialTrackingTab()
     
      //Loading Screen------------------------------------------------------------------------
     // Constants
-    static double lastTime = ImGui::GetTime();
+    //static double lastTime = ImGui::GetTime();
     /*
     const int numSegments = 20;
     const float barWidth = 300.0f;
@@ -644,13 +653,13 @@ void RenderFacialTrackingTab()
                         if (offsetX > 0)
                             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
                         if (!selectedFilePath.empty() && !sortedPreviewKeys.empty()) {
-                                if(autoPlay){
+                                /*if(autoPlay){
                                     double currentTime = ImGui::GetTime();
                                     if (currentTime - lastTime >= frameDuration) {
                                         currentFrameIndex = (currentFrameIndex + 1) % previewTextures.size();
                                         lastTime = currentTime;
                                     }
-                                }
+                                }*/
                                 const GLuint& frameKey = sortedPreviewKeys[currentFrameIndex];
                                 ImVec2 imagePos = ImGui::GetCursorScreenPos();
                                 GLuint texID = frameKey;
@@ -687,13 +696,13 @@ void RenderFacialTrackingTab()
                             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
                     
                         if (!selectedFilePath.empty() && !sortedTrackingKeys.empty()) {
-                            if(autoPlay){
+                            /*if(autoPlay){
                                 double currentTime = ImGui::GetTime();
                                 if (currentTime - lastTime >= frameDuration) {
                                     currentFrameIndex = (currentFrameIndex + 1) % trackingTextures.size();
                                     lastTime = currentTime;
                                 }
-                            };
+                            };*/
                             const GLuint& frameKey = sortedTrackingKeys[currentFrameIndex];
                             GLuint texID = frameKey;
                             ImVec2 imagePos = ImGui::GetCursorScreenPos();
@@ -767,6 +776,7 @@ void RenderFacialTrackingTab()
                 pendingPythonPath = selectedFilePath;
                 std::cout << "[INFO] Selected file path: " << selectedFilePath << std::endl;
                 update_progress(0,0);
+                prevCur=0;
                 std::filesystem::path selectedPath(selectedFilePath);
                 std::string filename = selectedPath.stem().string();
                 //Setting up directory for selected file
@@ -950,6 +960,8 @@ void SetAppWorkingDirectory()
 }
 
 bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bool& autoPlay) {
+
+
     // --- Constants ---
     const float controlsH     = 28.0f;  // space for buttons above
     const float headerH       = 18.0f;
@@ -966,6 +978,15 @@ bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bo
     const float keyDiamondR   = 5.0f;
     const float majorTickH    = 12.0f;
     const float minorTickH    = 6.0f;
+
+    // -- Frame Update --
+    if (autoPlay && totalFrames > 0) {
+        double currentTime = ImGui::GetTime();
+        if (currentTime - lastTime >= frameDuration) {
+            currentFrame = (currentFrame + 1) % totalFrames;
+            lastTime = currentTime;
+        }
+    }
 
     // --- Layout ---
     ImDrawList* dl = ImGui::GetWindowDrawList();
