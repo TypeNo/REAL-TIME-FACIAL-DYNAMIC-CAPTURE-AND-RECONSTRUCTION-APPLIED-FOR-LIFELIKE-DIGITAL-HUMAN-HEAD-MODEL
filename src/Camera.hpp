@@ -7,7 +7,8 @@
 class Camera {
 public:
     Camera();
-    glm::vec3 Position;
+    mutable glm::vec3 Position; // allow it to be modified in const method
+    mutable glm::vec3 Front;
     void ProcessMouseMovement(float dx, float dy);
     void ProcessMouseScroll(float dy);
     glm::mat4 GetViewMatrix() const;

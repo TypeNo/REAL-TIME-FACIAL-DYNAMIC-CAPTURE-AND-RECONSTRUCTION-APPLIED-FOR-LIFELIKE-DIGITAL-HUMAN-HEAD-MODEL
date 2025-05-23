@@ -39,6 +39,7 @@ namespace py = pybind11;
 #include "Model.hpp"
 #include "Shader.hpp"
 #include "Camera.hpp"
+#include "TextureLoader.hpp"
 
 
 namespace fs = std::filesystem;
@@ -52,8 +53,14 @@ std::thread pythonThread;// Face_reconstruction thread
 std::atomic<bool> shouldRunPython(false);
 std::string pendingPythonPath;
 bool pythonThreadRunning = false; 
-std::thread       g_TextureThread;//Textures_loading thread
+std::thread g_TextureThread;//Textures_loading thread
 std::atomic<bool> textureUpdateRequested(false);
+// Global atomic status variable to track progress inside the thread
+std::atomic<int> g_TextureThreadProgress(0);
+std::atomic<bool> g_TextureThreadRunning(false);
+// Static or global variable to remember last printed progress
+static int lastPrintedProgress = -1;
+static int frameCount = 0; // Keeps track of how many frames have passed
 
 // Global variables for progress
 static bool hasShownNoFileInfo = false;
@@ -72,8 +79,8 @@ Camera camera;
 bool mouseDragging = false;
 float lastX = 0, lastY = 0;
 GLuint fbo, colorTex, depthRb;
-Shader shader;
-Model model;
+static Shader shader;
+static Model model;
 
 //Default Input Dir
 std::string GetDesktopPath() {
@@ -133,6 +140,8 @@ static std::map<std::string, GLuint> previewTextures;  // Store all preview text
 static std::vector<GLuint> sortedPreviewKeys;
 
 
+
+
 //Configuring Working Directory
 void SetAppWorkingDirectory();
 
@@ -140,7 +149,7 @@ void SetAppWorkingDirectory();
 void UpdateTexture(const std::string& FolderPath, std::map<std::string, GLuint> &Textures,std::vector<GLuint> &SortedKeys,std::string &LastFile);
 
 //Loading Single Images as Texture
-GLuint LoadTextureFromFile(const char* filename);
+//GLuint LoadTextureFromFile(const char* filename);
 
 //Delete Tracking Images
 void DeleteAllTextures(std::map<std::string, GLuint>& Textures, std::vector<GLuint>& sortedKeys); 
@@ -227,6 +236,10 @@ int main()
         
         glfwMakeContextCurrent(window);
         gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+        shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+        model = Model("Animation.glb");
+        //static Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+        //static Model model("Animation.glb");
         glEnable(GL_DEPTH_TEST);
         glfwSwapInterval(1); // Enable vsync
 
@@ -262,30 +275,82 @@ int main()
             py::gil_scoped_release release; // This releases the GIL for this scope   
             glfwPollEvents();
 
+            // At the top of your loop
+            //std::cout << "\n========== Frame: " << frameCount << " ==========" << std::endl;
+            
             // Updating Textures
             if (!selectedFilePath.empty()) {
-                hasShownNoFileInfo = false; // Reset the flag when a file is selected
-                if(!textureUpdateRequested){
+                hasShownNoFileInfo = false;
+            
+                //std::cout << "[DEBUG] Frame " << frameCount << " | textureUpdateRequested: " << textureUpdateRequested << "\n";
+                //std::cout << "[DEBUG] Frame " << frameCount << " | g_TextureThreadRunning: " << g_TextureThreadRunning << "\n";
+            
+                if (!textureUpdateRequested) {
                     textureUpdateRequested = true;
+                    g_TextureThreadRunning = true;
+            
+                    //std::cout << "[DEBUG] Frame " << frameCount << " | Starting texture thread...\n";
+                    static int threadframeCount = 0; // Keeps track of how many frames have passed
+            
                     g_TextureThread = std::thread([&]() {
-                        glfwMakeContextCurrent(sharedWindow); // now it's visible here
-                        // Only do the folder‐scanning / texture‐loading here.
-                        UpdateTexture(PreviewFolderPath,  previewTextures,  sortedPreviewKeys,  lastPreviewPath);
+                        // Updating Textures
+                        
+                        //std::cout << "[DEBUG THREAD] (Frame " << threadframeCount << ") Entered thread\n";
+            
+                        g_TextureThreadProgress = 0;
+            
+                        glfwMakeContextCurrent(sharedWindow);
+            
+                        g_TextureThreadProgress = 1;
+                        //std::cout << "[DEBUG THREAD] (Frame " << threadframeCount  << ") Loading preview textures...\n";
+                        UpdateTexture(PreviewFolderPath, previewTextures, sortedPreviewKeys, lastPreviewPath);
+            
+                        g_TextureThreadProgress = 2;
+                        //std::cout << "[DEBUG THREAD] (Frame " << threadframeCount  << ") Loading landmark textures...\n";
                         UpdateTexture(LandmarkFolderPath, trackingTextures, sortedTrackingKeys, lastTrackingPath);
+            
                         glfwMakeContextCurrent(nullptr);
+            
+                        g_TextureThreadProgress = 3;
+                        //std::cout << "[DEBUG THREAD] (Frame " << threadframeCount  << ") Texture loading finished.\n";
+            
                         textureUpdateRequested = false;
+                        g_TextureThreadRunning = false;
+            
+                        //std::cout << "[DEBUG THREAD] (Frame " << threadframeCount  << ") Thread flags reset\n";
+                        threadframeCount++;
+
                     });
+            
                     g_TextureThread.detach();
                 }
-                
-                //UpdateTexture(PreviewFolderPath, previewTextures, sortedPreviewKeys,lastPreviewPath);
-                //UpdateTexture(LandmarkFolderPath, trackingTextures, sortedTrackingKeys,lastTrackingPath);
-
+            
+                /*if (g_TextureThreadRunning) {
+                    int progress = g_TextureThreadProgress.load();
+                    if (progress != lastPrintedProgress) {
+                        lastPrintedProgress = progress;
+                        std::cout << "[FRAME " << frameCount << "] ";
+                        switch (progress) {
+                            case 0: std::cout << "Texture thread started\n"; break;
+                            case 1: std::cout << "Loading preview textures...\n"; break;
+                            case 2: std::cout << "Loading landmark textures...\n"; break;
+                            case 3: std::cout << "Texture loading finished.\n"; break;
+                            default: std::cout << "Unknown progress state.\n"; break;
+                        }
+                    }
+                } else {
+                    if (lastPrintedProgress != -2) {
+                        std::cout << "[FRAME " << frameCount << "] Texture thread not running\n";
+                        lastPrintedProgress = -2;
+                    }
+                }*/
+            
             } else if (!hasShownNoFileInfo) {
                 std::cout << "[INFO] No file selected. Using default black texture." << std::endl;
                 hasShownNoFileInfo = true;
             }
-
+            
+            
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
@@ -457,6 +522,7 @@ int main()
                 }
                                 
             }
+            
 
             // === Then finish the frame
 
@@ -471,6 +537,7 @@ int main()
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             glfwSwapBuffers(window);
+            ++frameCount; // Advance frame counter at end of the loop
         }
 
         // Cleanup
@@ -587,11 +654,11 @@ void RenderFacialTrackingTab()
                                 const GLuint& frameKey = sortedPreviewKeys[currentFrameIndex];
                                 ImVec2 imagePos = ImGui::GetCursorScreenPos();
                                 GLuint texID = frameKey;
-                                ImGui::Image((ImTextureID)(intptr_t)texID, imageSize);
+                                ImGui::Image((ImTextureID)(intptr_t)texID, imageSize,ImVec2(0, 1), ImVec2(1, 0));
                            
                         } else {
                             ImVec2 imagePos = ImGui::GetCursorScreenPos();
-                            ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize);
+                            ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize,ImVec2(0, 1), ImVec2(1, 0));
                         }
                         ImGui::EndTabItem();
                     }
@@ -630,7 +697,7 @@ void RenderFacialTrackingTab()
                             const GLuint& frameKey = sortedTrackingKeys[currentFrameIndex];
                             GLuint texID = frameKey;
                             ImVec2 imagePos = ImGui::GetCursorScreenPos();
-                            ImGui::Image((ImTextureID)(intptr_t)texID, imageSize);
+                            ImGui::Image((ImTextureID)(intptr_t)texID, imageSize,ImVec2(0, 1), ImVec2(1, 0));
                     
                             // Debug output
                            /* ImGui::Text("sortedTrackingKeys size: %d", (int)sortedTrackingKeys.size());
@@ -638,7 +705,7 @@ void RenderFacialTrackingTab()
                             ImGui::Text("texID (GLuint): %u", texID);*/
                         } else {
                             ImVec2 imagePos = ImGui::GetCursorScreenPos();
-                            ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize);
+                            ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize,ImVec2(0, 1), ImVec2(1, 0));
                     
                             // Debug output
                             /*ImGui::Text("No valid texture to show.");
@@ -703,7 +770,7 @@ void RenderFacialTrackingTab()
                 std::filesystem::path selectedPath(selectedFilePath);
                 std::string filename = selectedPath.stem().string();
                 //Setting up directory for selected file
-                std::string baseOutputPath = "E:/Project/DECA3/DECA/output/";
+                std::string baseOutputPath = "./output/";
                 LandmarkFolderPath = baseOutputPath + filename + "/landmarks2d";
                 PreviewFolderPath = baseOutputPath + filename + "/inputs";
                 targetDir = baseOutputPath + filename;
@@ -782,56 +849,6 @@ void runPythonConstruct(const std::string& selectedFilePath) {
     
 }
 
-//LoadTextureFromFile
-GLuint LoadTextureFromFile(const char* filename)
-{
-    if (!std::filesystem::exists(filename)) {
-        std::cout << "[ERROR] File does not exist: " << filename << std::endl;
-    }
-    
-    std::cout << "[DEBUG] Attempting to load texture from: " << filename << std::endl;
-
-    int width, height, channels;
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4); // Force RGBA
-    if (data == nullptr)
-    {
-        std::cout << "[ERROR] Failed to load image: " << filename << std::endl;
-        return 0;
-    }
-
-    std::cout << "[INFO] Image loaded: " << filename << " (" << width << "x" << height 
-              << ", channels requested: 4, original channels: " << channels << ")" << std::endl;
-
-    GLuint textureID = 0;
-    glGenTextures(1, &textureID);
-    if (textureID == 0)
-    {
-        std::cout << "[ERROR] glGenTextures failed!" << std::endl;
-        stbi_image_free(data);
-        return 0;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        std::cout << "[ERROR] OpenGL error after glTexImage2D: " << err << std::endl;
-    }
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind for safety
-    stbi_image_free(data);
-
-    std::cout << "[DEBUG] Texture loaded successfully with ID: " << textureID << std::endl;
-
-    return textureID;
-}
-
 void UpdateTexture(const std::string& FolderPath, std::map<std::string, GLuint> &Textures, std::vector<GLuint> &sortedKeys, std::string &LastFile) {
     namespace fs = std::filesystem;
 
@@ -841,6 +858,7 @@ void UpdateTexture(const std::string& FolderPath, std::map<std::string, GLuint> 
     static std::map<std::string, std::string> lastDebuggedFile;
 
     if (!fs::exists(FolderPath)) {
+        
         if (!shownFolderMissing[FolderPath]) {
             std::cout << "[INFO] Folder does not exist yet: " << FolderPath << std::endl;
             shownFolderMissing[FolderPath] = true;
@@ -1053,18 +1071,40 @@ bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bo
     return ImGui::IsItemHovered() || ImGui::IsItemActive();
 }
 
-void RenderFacialReconstructionTab(){
-    ImGui:: Columns(2, nullptr, true);
-    ImGui::Text("Model Preview content goes here...");
-    DrawModelView();
+void RenderFacialReconstructionTab() {
+    // Get the total width and set the first column to 70% of it
+    float totalWidth = ImGui::GetContentRegionAvail().x;
+    ImGui::Columns(2, nullptr, true);
+    ImGui::SetColumnWidth(0, totalWidth * 0.7f);  // 70% for the first column (Face Preview)
+
+    // --- First Column: Face Preview with tab bar ---
+    if (ImGui::BeginChild("Previewer", ImVec2(0, 0), true)) {
+        if (ImGui::BeginTabBar("FacePreviewTabs")) {
+            if (ImGui::BeginTabItem("Model View")) {
+                DrawModelView();  // Display model preview
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Render View")) {
+                ImGui::Text("Render view content goes here...");
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
+        }
+        ImGui::EndChild();
+    }
+
     ImGui::NextColumn();
+
+    // --- Second Column: Manager Tabs or tools (30%) ---
     ImGui::Text("Manager Tabs content goes here...");
-    ImGui::Columns(1);
+
+    ImGui::Columns(1);  // Reset column layout
 }
 
 void DrawModelView() {
-    ImGuiIO& io = ImGui::GetIO();  // just get the global instance again
-    ImGui::Begin("Model Preview");
+    ImGuiIO& io = ImGui::GetIO();
 
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
     static int fbWidth = 0, fbHeight = 0;
@@ -1084,8 +1124,9 @@ void DrawModelView() {
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)fbWidth / fbHeight, 0.1f, 100.0f);
     glm::mat4 modelMatrix = glm::mat4(1.0f);
-    shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-    model = Model("output_animation.glb");
+
+    //static Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    //static Model model("Animation.glb");
 
     shader.use();
     shader.setMat4("model", modelMatrix);
@@ -1095,12 +1136,14 @@ void DrawModelView() {
     shader.setVec3("lightColor", glm::vec3(1.0f));
     shader.setVec3("objectColor", glm::vec3(1.0f, 0.8f, 0.7f));
     shader.setVec3("viewPos", camera.Position);
+    shader.setVec3("lightPos", camera.Position + camera.Front * 5.0f);  // dynamic lig
+    shader.setInt("diffuseMap", 0);  // Bind to texture unit 0
 
     model.Draw();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // -- Display in ImGui --
+    // -- Display in ImGui inside column --
     ImGui::Image((ImTextureID)(intptr_t)colorTex, viewportSize, ImVec2(0, 1), ImVec2(1, 0)); // Flip vertically
 
     // Mouse controls
@@ -1110,10 +1153,7 @@ void DrawModelView() {
         ImGui::ResetMouseDragDelta();
     }
     camera.ProcessMouseScroll(io.MouseWheel);
-
-    ImGui::End();
 }
-
 
 void InitFramebuffer(int width, int height) {
     glGenFramebuffers(1, &fbo);

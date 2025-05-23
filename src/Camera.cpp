@@ -28,8 +28,10 @@ glm::mat4 Camera::GetViewMatrix() const {
         cos(radPitch) * cos(radYaw)
     };
 
-    glm::vec3 position = target - direction * distance;
-    return glm::lookAt(position, target, glm::vec3(0, 1, 0));
+    Front = glm::normalize(direction); // <- Update Front here
+
+    Position = target - direction * distance;
+    return glm::lookAt(Position, target, glm::vec3(0, 1, 0));
 }
 
 float Camera::GetDistance() const {
