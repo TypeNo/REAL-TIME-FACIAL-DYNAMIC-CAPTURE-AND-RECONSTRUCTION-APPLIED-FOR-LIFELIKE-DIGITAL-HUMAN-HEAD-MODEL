@@ -93,7 +93,8 @@
         "any": "cpp",
         "bitset": "cpp",
         "cinttypes": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "*.rh": "cpp"
     },
     "CMake.configureArgs": [
         "-DCMAKE_TOOLCHAIN_FILE=E:/Microsoft Visual Studio/2022/Community/VC/vcpkg/scripts/buildsystems/vcpkg.cmake"

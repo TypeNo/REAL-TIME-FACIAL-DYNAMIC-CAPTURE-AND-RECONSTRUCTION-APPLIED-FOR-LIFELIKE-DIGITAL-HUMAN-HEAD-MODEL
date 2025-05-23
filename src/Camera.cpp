@@ -4,7 +4,7 @@
 #include <cmath>
 
 Camera::Camera()
-    : yaw(0.0f), pitch(0.0f), distance(3.0f), target(0.0f, 0.0f, 0.0f), Position(glm::vec3(0.0f, 0.0f, 3.0f)) {}
+    : yaw(0.0f), pitch(0.0f), distance(1.0f), target(0.0f, 0.0f, 0.0f), Position(glm::vec3(0.0f, 0.0f, 1.0f)) {}
 
 void Camera::ProcessMouseMovement(float dx, float dy) {
     yaw += dx * 0.25f;

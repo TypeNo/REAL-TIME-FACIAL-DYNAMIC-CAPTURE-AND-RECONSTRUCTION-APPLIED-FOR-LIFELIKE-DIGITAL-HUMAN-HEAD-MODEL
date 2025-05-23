@@ -81,6 +81,9 @@ float lastX = 0, lastY = 0;
 GLuint fbo, colorTex, depthRb;
 static Shader shader;
 static Model model;
+std::string currentShaderVertexPath;
+std::string currentShaderFragmentPath;
+std::string currentModelPath = "Animation.glb";
 
 //Default Input Dir
 std::string GetDesktopPath() {
@@ -112,12 +115,17 @@ static void glfw_error_callback(int error, const char* description)
 //Interface Rendering---------------------------------------------------------------------------
 //GUI of Facial Tracking-----
 void RenderFacialTrackingTab();
+void UpdateFacialTracking();
+void RenderFacialTrackingUI();
 //GUI of Facial Reconstruction
 void RenderFacialReconstructionTab();
+void UpdateFacialReconstruction(const std::string& modelPath);
 void DrawModelView();
 void InitFramebuffer(int width, int height);
 
 //IMGUI Texture Rendering------------------------------------------------------------------------
+//Default Texture
+static GLuint defaultTexture = 0;
 //Frames Playback-----
 float playbackFPS = 30.0f;            // Target playback rate
 static size_t currentFrameIndex = 0;
@@ -363,6 +371,8 @@ int main()
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
+            UpdateFacialTracking();
+            UpdateFacialReconstruction("Animation.glb");
 
             
             // Your main UI
@@ -390,7 +400,8 @@ int main()
                     {
                         if (ImGui::BeginTabItem("Facial Capture"))
                         {
-                            RenderFacialTrackingTab();
+                            //RenderFacialTrackingTab();
+                            RenderFacialTrackingUI();
                             ImGui::EndTabItem();
                         }
 
@@ -562,6 +573,161 @@ int main()
         std::cerr << "Python initialization error: " << e.what() << std::endl;
         return -1;
     }
+}
+
+void UpdateFacialTracking()
+{
+    //static GLuint defaultTexture = 0;
+
+    // Lazy load default black texture once
+    if (defaultTexture == 0) {
+        const int width = 256;
+        const int height = 256;
+        unsigned char blackPixels[width * height * 3];
+        std::fill_n(blackPixels, width * height * 3, 0);
+
+        glGenTextures(1, &defaultTexture);
+        glBindTexture(GL_TEXTURE_2D, defaultTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, blackPixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+
+    // Handle ImGuiFileDialog state changes here,
+    // file selection processing, updating paths, flags
+    if (ImGuiFileDialog::Instance()->Display("ChooseCapture")) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            selectedFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+            Last_selectedFilePath = selectedFilePath;
+            shouldRunPython = true;
+            pendingPythonPath = selectedFilePath;
+            update_progress(0,0);
+            prevCur = 0;
+
+            std::filesystem::path selectedPath(selectedFilePath);
+            std::string filename = selectedPath.stem().string();
+            std::string baseOutputPath = "./output/";
+            LandmarkFolderPath = baseOutputPath + filename + "/landmarks2d";
+            PreviewFolderPath = baseOutputPath + filename + "/inputs";
+            targetDir = baseOutputPath + filename;
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+
+    // Any other update logic you want, e.g.:
+    // - Update currentFrameIndex if autoplay enabled
+    // - Manage texture arrays sortedPreviewKeys, sortedTrackingKeys
+}
+
+void RenderFacialTrackingUI()
+{
+    ImGui::BeginChild("LeftSection", ImVec2(ImGui::GetContentRegionAvail().x * 0.7f, 0), false);
+    {
+        ImGui::BeginChild("LeftTop", ImVec2(0, ImGui::GetContentRegionAvail().y), true);
+        {
+            ImGui::BeginChild("LeftTab", ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, 0), true);
+            {
+                if (ImGui::BeginTabBar("LeftTabBar"))
+                {
+                    if (ImGui::BeginTabItem("Image Preview"))
+                    {
+                        ImVec2 imageSize = ImGui::GetContentRegionAvail();
+                        float padding = 10.0f;
+                        if (imageSize.x > padding * 2 && imageSize.y > padding * 2)
+                            imageSize = ImVec2(imageSize.x - padding * 2, imageSize.y - padding * 2);
+
+                        float availWidth = ImGui::GetContentRegionAvail().x;
+                        float offsetX = (availWidth - imageSize.x) * 0.5f;
+                        if (offsetX > 0)
+                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+
+                        if (!selectedFilePath.empty() && !sortedPreviewKeys.empty()) {
+                            const GLuint& frameKey = sortedPreviewKeys[currentFrameIndex];
+                            ImGui::Image((ImTextureID)(intptr_t)frameKey, imageSize, ImVec2(0, 1), ImVec2(1, 0));
+                        }
+                        else {
+                            ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize, ImVec2(0, 1), ImVec2(1, 0));
+                        }
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndTabBar();
+                }
+            }
+            ImGui::EndChild();
+
+            ImGui::SameLine();
+
+            ImGui::BeginChild("RightTab", ImVec2(0, 0), true);
+            {
+                if (ImGui::BeginTabBar("RightTabBar"))
+                {
+                    if (ImGui::BeginTabItem("Facial Tracking"))
+                    {
+                        ImVec2 imageSize = ImGui::GetContentRegionAvail();
+                        float padding = 10.0f;
+                        if (imageSize.x > padding * 2 && imageSize.y > padding * 2)
+                            imageSize = ImVec2(imageSize.x - padding * 2, imageSize.y - padding * 2);
+
+                        float availWidth = ImGui::GetContentRegionAvail().x;
+                        float offsetX = (availWidth - imageSize.x) * 0.5f;
+                        if (offsetX > 0)
+                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+
+                        if (!selectedFilePath.empty() && !sortedTrackingKeys.empty()) {
+                            const GLuint& frameKey = sortedTrackingKeys[currentFrameIndex];
+                            ImGui::Image((ImTextureID)(intptr_t)frameKey, imageSize, ImVec2(0, 1), ImVec2(1, 0));
+                        }
+                        else {
+                            ImGui::Image((ImTextureID)(intptr_t)defaultTexture, imageSize, ImVec2(0, 1), ImVec2(1, 0));
+                        }
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndTabBar();
+                }
+            }
+            ImGui::EndChild();
+        }
+        ImGui::EndChild();
+    }
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    ImGui::BeginChild("RightSection", ImVec2(0, 0), true);
+    {
+        ImGui::Text("[Capture Source]");
+
+        ImGui::BeginGroup();
+        if (ImGui::Button("Choose File")) {
+            IGFD::FileDialogConfig config;
+            config.path = GetDesktopPath();
+            config.countSelectionMax = 1;
+            config.flags = ImGuiFileDialogFlags_Modal;
+
+            ImGuiFileDialog::Instance()->OpenDialog(
+                "ChooseCapture",
+                "Select Capture Source",
+                "Images and Videos{.png,.jpg,.jpeg,.bmp,.gif,.mp4,.avi,.mov,.mkv}",
+                config
+            );
+        }
+        ImGui::SameLine();
+
+        float availableWidth = ImGui::GetContentRegionAvail().x;
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + availableWidth);
+        ImGui::TextWrapped("%s", selectedFilePath.empty() ? "<No file selected>" : selectedFilePath.c_str());
+        ImGui::PopTextWrapPos();
+        ImGui::EndGroup();
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        static int startFrame = 0, endFrame = 464;
+        ImGui::InputInt("Start Frame to Process", &startFrame);
+        ImGui::InputInt("End Frame to Process", &endFrame);
+    }
+    ImGui::EndChild();
 }
 
 void RenderFacialTrackingTab()
@@ -1092,6 +1258,17 @@ bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bo
     return ImGui::IsItemHovered() || ImGui::IsItemActive();
 }
 
+void UpdateFacialReconstruction(const std::string& modelPath){
+    
+    //shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+    if(modelPath != currentModelPath){
+        //model = Model("Animation.glb");
+        model = Model(modelPath.c_str());
+        currentModelPath = modelPath;
+    }
+    
+}
+
 void RenderFacialReconstructionTab() {
     // Get the total width and set the first column to 70% of it
     float totalWidth = ImGui::GetContentRegionAvail().x;
@@ -1145,6 +1322,7 @@ void DrawModelView() {
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)fbWidth / fbHeight, 0.1f, 100.0f);
     glm::mat4 modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
     //static Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     //static Model model("Animation.glb");
