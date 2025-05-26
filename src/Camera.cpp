@@ -15,7 +15,7 @@ void Camera::ProcessMouseMovement(float dx, float dy) {
 
 void Camera::ProcessMouseScroll(float dy) {
     distance -= dy * 0.1f;
-    distance = std::clamp(distance, 1.0f, 10.0f);
+    distance = std::clamp(distance, 0.5f, 10.0f);
 }
 
 glm::mat4 Camera::GetViewMatrix() const {

@@ -83,7 +83,7 @@ static Shader shader;
 static Model model;
 std::string currentShaderVertexPath;
 std::string currentShaderFragmentPath;
-std::string currentModelPath = "Animation.glb";
+std::string currentModelPath = "Animation1.glb";
 
 //Default Input Dir
 std::string GetDesktopPath() {
@@ -131,6 +131,8 @@ float playbackFPS = 30.0f;            // Target playback rate
 static size_t currentFrameIndex = 0;
 static double frameDuration = 1.0 / playbackFPS;
 static double lastTime = 0.0;
+static double currentTime = 0.0;
+
 
 //--------------------
 //Input Directory Configuration-----
@@ -247,7 +249,7 @@ int main()
         glfwMakeContextCurrent(window);
         gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
         shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-        model = Model("Animation.glb");
+        model = Model("Animation1.glb", shader);
         //static Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
         //static Model model("Animation.glb");
         glEnable(GL_DEPTH_TEST);
@@ -372,7 +374,7 @@ int main()
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             UpdateFacialTracking();
-            UpdateFacialReconstruction("Animation.glb");
+            UpdateFacialReconstruction("Animation1.glb");
 
             
             // Your main UI
@@ -1263,7 +1265,7 @@ void UpdateFacialReconstruction(const std::string& modelPath){
     //shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     if(modelPath != currentModelPath){
         //model = Model("Animation.glb");
-        model = Model(modelPath.c_str());
+        model = Model(modelPath.c_str(), shader);
         currentModelPath = modelPath;
     }
     
@@ -1326,7 +1328,11 @@ void DrawModelView() {
 
     //static Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     //static Model model("Animation.glb");
-
+    // Update morph animation
+    float time = glfwGetTime(); // or your time source
+    //float time = ImGui::GetTime(); // or your time source
+    model.UpdateAnimation(time);
+    
     shader.use();
     shader.setMat4("model", modelMatrix);
     shader.setMat4("view", view);
@@ -1337,7 +1343,6 @@ void DrawModelView() {
     shader.setVec3("viewPos", camera.Position);
     shader.setVec3("lightPos", camera.Position + camera.Front * 5.0f);  // dynamic lig
     shader.setInt("diffuseMap", 0);  // Bind to texture unit 0
-
     model.Draw();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

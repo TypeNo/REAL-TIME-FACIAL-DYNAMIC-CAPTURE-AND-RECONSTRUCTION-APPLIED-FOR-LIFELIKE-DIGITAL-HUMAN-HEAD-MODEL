@@ -84,7 +84,7 @@ GLuint LoadTextureFromMemory(unsigned char* data, int size) {
         return 0;
     }
 
-    std::cout << "[LoadTextureFromMemory] First 10 pixel RGB values:\n";
+    //std::cout << "[LoadTextureFromMemory] First 10 pixel RGB values:\n";
 
     /*int maxPixelsToPrint = width * height;
     int componentsPerPixel = nrChannels;

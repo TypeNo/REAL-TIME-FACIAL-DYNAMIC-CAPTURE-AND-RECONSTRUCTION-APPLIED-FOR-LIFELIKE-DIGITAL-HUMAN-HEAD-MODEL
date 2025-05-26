@@ -12,11 +12,27 @@ Model::Model(const std::string& path) {
     loadModel(path);
 }
 
-void Model::Draw() {
-    static bool hasPrinted = false;  // ensures logging only happens once
+Model::Model(const std::string& path, Shader& globalshader) {
+    loadModel(path);
+    shader = &globalshader;
+}
 
-    int meshIndex = 0;
-    for (const auto& mesh : meshes) {
+void Model::Draw() {
+    static bool hasPrinted = false;
+
+    for (int meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
+        const auto& mesh = meshes[meshIndex];
+
+        shader->setInt("numMorphTargets", (int)morphWeights.size());
+        shader->setInt("numVertices", mesh.numVertices);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, mesh.morphSSBO);
+        //glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.morphSSBO);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, mesh.weightsSSBO);
+        //glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.weightsSSBO);
+
+
         if (!hasPrinted) {
             std::cout << "[Mesh " << meshIndex << "] ";
             if (mesh.textureID) {
@@ -26,22 +42,206 @@ void Model::Draw() {
             }
         }
 
-        if (mesh.textureID)
-            //glActiveTexture(GL_TEXTURE0);
+        if (mesh.textureID) {
             glBindTexture(GL_TEXTURE_2D, mesh.textureID);
+        } else {
+            glBindTexture(GL_TEXTURE_2D, 0); // Unbind any texture if none for this mesh
+        }
 
         glBindVertexArray(mesh.VAO);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, mesh.debugSSBO);
+        
         glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0);
-        meshIndex++;
+
+        // Optional: unbind VAO and texture here if needed
+        glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.debugSSBO);
+
+        glm::vec4* mapped = (glm::vec4*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+
+        /*if (mapped) {
+            for (int i = 0; i < mesh.numVertices; ++i) {
+                glm::vec4 pos = mapped[i];
+                std::cout << "Vertex[" << i << "] VERTEX INDEX: " << pos.w << "\n";
+                std::cout << "Morphed DELTA[" << i << "]: (" 
+                        << pos.x << ", " << pos.y << ", " << pos.z << ")\n";
+            }
+            glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+        }*/
+
     }
 
-    hasPrinted = true;  // prevent further prints
+    hasPrinted = true;
 }
 
+/*
+void Model::UpdateAnimation(float time) {
+    auto it = meshes[0].morphAnimations.find(0); // assume mesh index 0
+    if (it == meshes[0].morphAnimations.end()) return;
+
+    const auto& keys = it->second;
+    if (keys.size() < 2) return;
+
+    // Debug: check weights per key
+    for (size_t i = 0; i < keys.size(); ++i) {
+        std::cout << "[DEBUG] Key " << i << " has " << keys[i].weights.size() << " weights\n";
+    }
+
+    float scaledTime = time * 1000.0f;
+
+    // Find the 2 keyframes
+    int k1 = 0, k2 = 1;
+    for (size_t i = 1; i < keys.size(); ++i) {
+        if (keys[i].time > scaledTime) {
+            k2 = i;
+            k1 = i - 1;
+            break;
+        }
+    }
+
+    for (size_t i = 0; i < keys.size(); ++i) {
+        std::cout << "[DEBUG] Key " << i << " time = " << keys[i].time << "\n";
+    }
+
+    // Debug output
+    std::cout << "[DEBUG] Time: " << time << "\n";
+    std::cout << "[DEBUG] Using keyframes:\n";
+    std::cout << "  k1 = " << k1 << ", time = " << keys[k1].time << "\n";
+    std::cout << "  k2 = " << k2 << ", time = " << keys[k2].time << "\n";
+
+    float t1 = keys[k1].time;
+    float t2 = keys[k2].time;
+    float alpha = (scaledTime - t1) / (t2 - t1);
+
+    // Interpolate weights
+    for (size_t i = 0; i < morphWeights.size(); ++i) {
+        float w1 = keys[k1].weights[i];
+        float w2 = keys[k2].weights[i];
+        morphWeights[i] = (1 - alpha) * w1 + alpha * w2;
+    }
+
+    // Upload to SSBO
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, meshes[0].weightsSSBO);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, morphWeights.size() * sizeof(float), morphWeights.data());
+    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshes[0].weightsSSBO);
+}*/
 
 void Model::UpdateAnimation(float time) {
-    // Animation system stub (future implementation)
+    auto it = meshes[0].morphAnimations.find(0); // Assume mesh index 0
+    if (it == meshes[0].morphAnimations.end()) return;
+
+    const auto& keys = it->second;
+    if (keys.empty()) return;
+
+    size_t morphTargetsCount = morphWeights.size(); // Number of morph targets
+    //size_t totalFrames = keys.size() / morphTargetsCount;
+    size_t totalFrames = keys.size();
+
+
+    //std::cout << "[DEBUG] morphTargetsCount = " << morphTargetsCount << "\n";
+    //std::cout << "[DEBUG] totalFrames = " << totalFrames << "\n";
+
+    if (totalFrames < 2) return;
+
+    //float scaledTime = time * 1000.0f;
+    float maxTime = keys.back().time;
+    float scaledTime = fmod(time * 1000.0f, maxTime);
+
+    //std::cout << "[DEBUG] scaledTime = " << scaledTime << "\n";
+
+    // Find current frame
+    int frame1 = 0, frame2 = 1;
+    for (size_t f = 1; f < totalFrames; ++f) {
+        //float frameTime = keys[f * morphTargetsCount].time;
+        float frameTime = keys[f].time;
+        if (frameTime > scaledTime) {
+            frame2 = f;
+            frame1 = f - 1;
+            break;
+        }
+    }
+
+    //float t1 = keys[frame1 * morphTargetsCount].time;
+    float t1 = keys[frame1].time;
+    //float t2 = keys[frame2 * morphTargetsCount].time;
+    float t2 = keys[frame2].time;
+    float alpha = (t2 != t1) ? (scaledTime - t1) / (t2 - t1) : 0.0f;
+
+    //std::cout << "[DEBUG] Using frames: " << frame1 << " (time = " << t1 << "), "
+    //         << frame2 << " (time = " << t2 << "), alpha = " << alpha << "\n";
+
+    // Print full weights of frame1 and frame2
+    /*std::cout << "[DEBUG] Keyframe " << frame1 << " weights:\n";
+    for (size_t j = 0; j < keys[frame1].weights.size(); ++j) {
+        std::cout << "  weights[" << j << "] = " << keys[frame1].weights[j] << "\n";
+    }
+
+    std::cout << "[DEBUG] Keyframe " << frame2 << " weights:\n";
+    for (size_t j = 0; j < keys[frame2].weights.size(); ++j) {
+        std::cout << "  weights[" << j << "] = " << keys[frame2].weights[j] << "\n";
+    }*/
+
+    
+    // Interpolate each morph weight
+    for (size_t j = 0; j < morphTargetsCount; ++j) {
+        //size_t idx1 = frame1 * morphTargetsCount + j;
+        //size_t idx2 = frame2 * morphTargetsCount + j;
+
+        //float w1 = keys[idx1].weights[0]; // each is a scalar
+        float w1 = keys[frame1].weights[j]; // each is a scalar
+        //float w2 = keys[idx2].weights[0];
+        float w2 = keys[frame2].weights[j];
+
+        float interp = (1 - alpha) * w1 + alpha * w2;
+
+        morphWeights[j] = interp;
+
+        //std::cout << "[DEBUG] morphWeight[" << j << "]: w1 = " << w1
+        //          << ", w2 = " << w2 << ", interpolated = " << interp << "\n";
+    }
+
+    //std::fill(morphWeights.begin(), morphWeights.end(), 0.0f);
+    //morphWeights[100] = 1.0f;  // only activate first morph
+
+
+    /*
+    // 1. Clear morph weights before interpolation
+    std::fill(morphWeights.begin(), morphWeights.end(), 0.0f);
+
+    // 2. Create temporary "one-hot" versions of keys[frame1] and keys[frame2]
+    std::vector<float> weights1(morphTargetsCount, 0.0f);
+    std::vector<float> weights2(morphTargetsCount, 0.0f);
+
+    // Only the "identity" index is set to 1.0
+    if (frame1 < morphTargetsCount)
+        weights1[frame1] = 1.0f;
+
+    if (frame2 < morphTargetsCount)
+        weights2[frame2] = 1.0f;
+
+    // 3. Interpolate each morph weight
+    for (size_t j = 0; j < morphTargetsCount; ++j) {
+        float w1 = weights1[j];
+        float w2 = weights2[j];
+        float interp = (1 - alpha) * w1 + alpha * w2;
+
+        morphWeights[j] = interp;
+
+        //std::cout << "[DEBUG] morphWeight[" << j << "]: w1 = " << w1
+        //        << ", w2 = " << w2 << ", interpolated = " << interp << "\n";
+    }*/
+
+    // Upload to SSBO
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, meshes[0].weightsSSBO);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, morphWeights.size() * sizeof(float), morphWeights.data());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshes[0].weightsSSBO);
 }
+
 
 void Model::loadModel(const std::string& path) {
     Assimp::Importer importer;
@@ -70,13 +270,24 @@ void Model::processNode(aiNode* node, const aiScene* scene) {
 }
 
 Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
+    Mesh result;
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
+    std::vector<glm::vec4> flattenedMorphData;
 
+    result.numVertices = mesh->mNumVertices;
+    //std::cout << "Mesh has " << result.numVertices << " vertices and "
+    //      << result.indexCount << " indices." << std::endl;
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
         vertices.push_back(mesh->mVertices[i].x);
         vertices.push_back(mesh->mVertices[i].y);
         vertices.push_back(mesh->mVertices[i].z);
+
+        /*{ // Only show debug for first few vertices for brevity
+            std::cout << "[DEBUG] Mesh Vertex " << i
+                      << " Pos = (" << mesh->mVertices[i].x << ", " << mesh->mVertices[i].y << ", " << mesh->mVertices[i].z << ")\n";
+                      //<< " normalDelta = (" << normalDelta.x << ", " << normalDelta.y << ", " << normalDelta.z << ")\n";
+        }*/
 
         vertices.push_back(mesh->mNormals[i].x);
         vertices.push_back(mesh->mNormals[i].y);
@@ -91,7 +302,90 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
             vertices.push_back(0.0f);
             vertices.push_back(0.0f);
         }
+        
     }
+
+    // Check for morph targets
+    if (mesh->mNumAnimMeshes > 0) {
+        //std::cout << "[DEBUG] Mesh has " << mesh->mNumAnimMeshes << " morph targets.\n";
+
+        result.numMorphTargets = mesh->mNumAnimMeshes;
+
+        for (unsigned int i = 0; i < mesh->mNumAnimMeshes; ++i) {
+            aiAnimMesh* animMesh = mesh->mAnimMeshes[i];
+            MorphTarget target;
+
+            //std::cout << "[DEBUG] Morph Target #" << i << " has vertex count = " << mesh->mNumVertices << "\n";
+
+            for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+                glm::vec4 posDelta(0.0f);
+                glm::vec4 normalDelta(0.0f);
+
+                if (animMesh->mVertices) {
+                    const aiVector3D& base = mesh->mVertices[v];
+                    const aiVector3D& target = animMesh->mVertices[v];
+                    if (target == base) {
+                        posDelta = glm::vec4(0.0f);  // no change
+                    } else {
+                        posDelta = glm::vec4(target.x - base.x, target.y - base.y, target.z - base.z, 0.0f);
+                    }
+                }
+
+                if (animMesh->mNormals) {
+                    const aiVector3D& baseN = mesh->mNormals[v];
+                    const aiVector3D& targetN = animMesh->mNormals[v];
+                    if (targetN == baseN) {
+                        normalDelta = glm::vec4(0.0f);
+                    } else {
+                        normalDelta = glm::vec4(targetN.x - baseN.x, targetN.y - baseN.y, targetN.z - baseN.z, 0.0f);
+                    }
+                }
+
+                // Store both position and normal deltas sequentially
+                flattenedMorphData.push_back(posDelta);
+                flattenedMorphData.push_back(normalDelta);
+                
+                target.positions.push_back(posDelta);
+                target.normals.push_back(normalDelta);
+
+               
+                /*if(i == 100)
+                { // Only show debug for first few vertices for brevity
+                    int baseIndex = i * mesh->mNumVertices * 2; // each vertex has pos + normal = 2 entries
+                    glm::vec3 posDelta = flattenedMorphData[baseIndex + v * 2];
+    
+                    std::cout << "[FlatData DEBUG] Vertex " << v
+                              << " posDelta = (" << posDelta.x << ", " << posDelta.y << ", " << posDelta.z << ")\n";
+                }*/
+            }
+
+            result.morphTargets.push_back(std::move(target));
+        }
+
+        /*{ // Only show debug for first few vertices for brevity
+            aiAnimMesh* animMesh = mesh->mAnimMeshes[100];
+            std::cout << "[DEBUG] Morph " << 100;
+            for (unsigned int v = 0; v < animMesh->mNumVertices; ++v) {
+                std::cout << "[DEBUG] Morph Vertex " << v 
+                        << " Pos = (" << animMesh->mVertices[v].x << ", " << animMesh->mVertices[v].y << ", " << animMesh->mVertices[v].z << ")\n";
+                        //<< " normalDelta = (" << normalDelta.x << ", " << normalDelta.y << ", " << normalDelta.z << ")\n";
+            }
+
+        // Print faces (indices referencing mVertices/morph target vertices)
+            std::cout << "[DEBUG] Faces using vertex indices:\n";
+            for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
+                const aiFace& face = mesh->mFaces[f];
+                std::cout << "  Face " << f << ": ";
+                for (unsigned int j = 0; j < face.mNumIndices; ++j) {
+                    std::cout << face.mIndices[j] << " ";
+                }
+                std::cout << "\n";
+            }
+        }*/
+
+
+    }
+
 
     for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
         for (unsigned int j = 0; j < mesh->mFaces[i].mNumIndices; j++) {
@@ -99,7 +393,6 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
         }
     }
 
-    Mesh result;
     result.indexCount = indices.size();
 
     glGenVertexArrays(1, &result.VAO);
@@ -121,23 +414,51 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
     glEnableVertexAttribArray(1);
     
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); // tex coords
-    glEnableVertexAttribArray(2);    
+    glEnableVertexAttribArray(2);
 
-    glBindVertexArray(0);
+    glGenBuffers(1, &result.morphSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, result.morphSSBO);
+    //glBufferData(GL_SHADER_STORAGE_BUFFER, result.morphTargets.size() * sizeof(MorphTarget),
+    //             result.morphTargets.data(), GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, flattenedMorphData.size() * sizeof(glm::vec4),
+    flattenedMorphData.data(), GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, result.morphSSBO); // Binding = 0
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
+    // Load default weights if morph targets exist
+    if (mesh->mNumAnimMeshes > 0) {
+        std::vector<float> defaultWeights(mesh->mNumAnimMeshes);
+        for (unsigned int i = 0; i < mesh->mNumAnimMeshes; ++i) {
+            defaultWeights[i] = mesh->mAnimMeshes[i]->mWeight;
+        }
+
+        // Debug print
+        //std::cout << "[DEBUG] Initial morph weights from mAnimMeshes:\n";
+        //for (size_t i = 0; i < defaultWeights.size(); ++i) {
+        //    std::cout << "  Weight[" << i << "] = " << defaultWeights[i] << "\n";
+        //}
+
+        morphWeights = defaultWeights;
+
+        glGenBuffers(1, &result.weightsSSBO);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, result.weightsSSBO);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, morphWeights.size() * sizeof(float), morphWeights.data(), GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, result.weightsSSBO); // Binding = 1
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
 
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
     
         unsigned int diffuseCount = material->GetTextureCount(aiTextureType_DIFFUSE);
-        std::cout << "Diffuse texture count: " << diffuseCount << std::endl;
+        //std::cout << "Diffuse texture count: " << diffuseCount << std::endl;
     
         if (diffuseCount > 0) {
             aiString str;
             material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
     
             std::string texPath = str.C_Str();
-            std::cout << "Diffuse texture path string: " << texPath << std::endl;
+            //std::cout << "Diffuse texture path string: " << texPath << std::endl;
     
             if (!texPath.empty() && texPath[0] == '*') {
                 std::cout << "Checking embedded texture cache for key: " << texPath << std::endl;
@@ -185,6 +506,62 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
         }
     }
     
+    for (unsigned int i = 0; i < scene->mNumAnimations; ++i) {
+        aiAnimation* anim = scene->mAnimations[i];
+        //std::cout << "[DEBUG] Animation " << i << ": name = " 
+        //          << (anim->mName.C_Str() ? anim->mName.C_Str() : "Unnamed") 
+        //          << ", NumMorphMeshChannels = " << anim->mNumMorphMeshChannels << "\n";
+    
+        for (unsigned int j = 0; j < anim->mNumMorphMeshChannels; ++j) {
+            aiMeshMorphAnim* morphAnim = anim->mMorphMeshChannels[j];
+            //std::cout << "  [DEBUG] MorphMeshChannel " << j << ": node name = " 
+            //          << morphAnim->mName.C_Str() 
+            //          << ", NumKeys = " << morphAnim->mNumKeys << "\n";
+    
+            aiNode* node = scene->mRootNode->FindNode(morphAnim->mName);
+            if (!node) {
+                //std::cout << "    [WARNING] Node not found for morph channel: " << morphAnim->mName.C_Str() << "\n";
+                continue;
+            }
+    
+            if (node->mNumMeshes == 0) {
+                //std::cout << "    [WARNING] Node has no meshes: " << morphAnim->mName.C_Str() << "\n";
+                continue;
+            }
+    
+            int meshIndex = node->mMeshes[0];
+            //std::cout << "    [DEBUG] Using mesh index: " << meshIndex << "\n";
+    
+            std::vector<MorphAnimKey> keys;
+            for (unsigned int k = 0; k < morphAnim->mNumKeys; ++k) {
+                const aiMeshMorphKey& key = morphAnim->mKeys[k];
+                MorphAnimKey newKey;
+                newKey.time = key.mTime;
+                newKey.weights.resize(key.mNumValuesAndWeights);
+    
+                //std::cout << "      [DEBUG] Keyframe " << k << ": time = " << key.mTime 
+                //          << ", NumValues = " << key.mNumValuesAndWeights << "\n";
+    
+                for (unsigned int w = 0; w < key.mNumValuesAndWeights; ++w) {
+                    newKey.weights[w] = key.mWeights[w];
+                    //std::cout << "        [DEBUG] Weight[" << w << "] = " << key.mWeights[w] << "\n";
+                }
+    
+                keys.push_back(newKey);
+            }
+    
+            result.morphAnimations[meshIndex] = keys;
+        }
+    }
+    
+    glBindVertexArray(0);
+
+    
+    glGenBuffers(2, &result.debugSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, result.debugSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * result.numVertices, nullptr, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, result.debugSSBO);  // binding = 1 matches GLSL
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    
     return result;
 }
-

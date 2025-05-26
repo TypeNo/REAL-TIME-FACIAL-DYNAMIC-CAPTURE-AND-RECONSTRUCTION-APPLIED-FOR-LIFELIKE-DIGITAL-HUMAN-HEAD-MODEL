@@ -6,7 +6,6 @@
 #include <iostream>
 
 Shader::Shader(){
-    
 }
 
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
