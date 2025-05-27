@@ -14,4 +14,6 @@ PYBIND11_EMBEDDED_MODULE(mybridge, m) {
     m.def("update_progress", &update_progress);
     m.def("get_current_progress",&get_current_progress);
     m.def("get_total_progress",&get_total_progress);
+    m.def("update_model_path",&update_model_path);
+    m.def("get_model_path",&get_model_path);
 }

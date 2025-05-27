@@ -451,6 +451,8 @@ int main()
                     lastPreviewPath = "";
                     lastTrackingPath = "";
                     reconstructModelPath = "";
+                    currentFrameIndex = 0;
+
 
                     try {
                         if (std::filesystem::exists(targetDir)) {
@@ -482,8 +484,9 @@ int main()
                 
                                 std::cout << "Running in thread with file: " << capturedPath << std::endl;
                                 runPythonConstruct(capturedPath);
-                                reconstructModelPath = "Animation1.glb";
-
+                                //reconstructModelPath = "Animation1.glb";
+                                reconstructModelPath = get_model_path();
+                                
                                 std::cout << "Successfully constructed the face model.\n";
                                 std::cout << "All done!" << std::endl;
                             }

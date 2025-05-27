@@ -176,7 +176,8 @@ def main(args):
     output_glb = os.path.join(savefolder, inputname, 'animation', 'dynamic_animation.glb')
     
     obj2glb.main(model_dir, frame_dir, output_glb)
-        
+    
+    mybridge.update_model_path(output_glb)
 
 
 if __name__ == '__main__':
