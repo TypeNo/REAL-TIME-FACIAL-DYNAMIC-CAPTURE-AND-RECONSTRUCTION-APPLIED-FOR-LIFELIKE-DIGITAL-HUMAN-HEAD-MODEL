@@ -24,6 +24,7 @@ from decalib.utils.tensor_cropper import transform_points
 import ctypes
 import os
 from ctypes import cdll
+import obj2glb
 # Load the DLL (ensure path is correct)
 dll_path = os.path.abspath("build/bin/Release/progress_shared.dll")
 progress = ctypes.CDLL(dll_path)
@@ -170,6 +171,11 @@ def main(args):
         #dll.update_progress(i+1, len(testdata))
 
     print(f'-- please check the results in {savefolder}')
+
+    frame_dir = os.path.join(savefolder, inputname, 'frames_model')
+    output_glb = os.path.join(savefolder, inputname, 'animation', 'dynamic_animation.glb')
+    
+    obj2glb.main(model_dir, frame_dir, output_glb)
         
 
 

@@ -283,6 +283,9 @@ def main(input_root, frame_dir, output_glb):
     # Check for unintentional type objects before saving
     find_type_objects(gltf)
 
+    # Ensure the output directory exists
+    os.makedirs(os.path.dirname(output_glb), exist_ok=True)
+
     # Save .glb
     gltf.save_binary(output_glb)
     print("✅ Exported to {output_path}")
