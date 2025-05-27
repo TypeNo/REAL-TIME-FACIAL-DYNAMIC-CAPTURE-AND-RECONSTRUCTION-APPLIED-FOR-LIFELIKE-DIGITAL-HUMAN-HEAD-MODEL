@@ -5,8 +5,7 @@
 #include <iostream>
 #include "TextureLoader.hpp"
 
-Model::Model() {
-}
+Model::Model() : loaded(false) {}
 
 Model::Model(const std::string& path) {
     loadModel(path);
@@ -15,9 +14,11 @@ Model::Model(const std::string& path) {
 Model::Model(const std::string& path, Shader& globalshader) {
     loadModel(path);
     shader = &globalshader;
+    loaded = true;
 }
 
 void Model::Draw() {
+    if (!loaded) return;
     static bool hasPrinted = false;
 
     for (int meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
@@ -78,60 +79,8 @@ void Model::Draw() {
     hasPrinted = true;
 }
 
-/*
 void Model::UpdateAnimation(float time) {
-    auto it = meshes[0].morphAnimations.find(0); // assume mesh index 0
-    if (it == meshes[0].morphAnimations.end()) return;
-
-    const auto& keys = it->second;
-    if (keys.size() < 2) return;
-
-    // Debug: check weights per key
-    for (size_t i = 0; i < keys.size(); ++i) {
-        std::cout << "[DEBUG] Key " << i << " has " << keys[i].weights.size() << " weights\n";
-    }
-
-    float scaledTime = time * 1000.0f;
-
-    // Find the 2 keyframes
-    int k1 = 0, k2 = 1;
-    for (size_t i = 1; i < keys.size(); ++i) {
-        if (keys[i].time > scaledTime) {
-            k2 = i;
-            k1 = i - 1;
-            break;
-        }
-    }
-
-    for (size_t i = 0; i < keys.size(); ++i) {
-        std::cout << "[DEBUG] Key " << i << " time = " << keys[i].time << "\n";
-    }
-
-    // Debug output
-    std::cout << "[DEBUG] Time: " << time << "\n";
-    std::cout << "[DEBUG] Using keyframes:\n";
-    std::cout << "  k1 = " << k1 << ", time = " << keys[k1].time << "\n";
-    std::cout << "  k2 = " << k2 << ", time = " << keys[k2].time << "\n";
-
-    float t1 = keys[k1].time;
-    float t2 = keys[k2].time;
-    float alpha = (scaledTime - t1) / (t2 - t1);
-
-    // Interpolate weights
-    for (size_t i = 0; i < morphWeights.size(); ++i) {
-        float w1 = keys[k1].weights[i];
-        float w2 = keys[k2].weights[i];
-        morphWeights[i] = (1 - alpha) * w1 + alpha * w2;
-    }
-
-    // Upload to SSBO
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, meshes[0].weightsSSBO);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, morphWeights.size() * sizeof(float), morphWeights.data());
-    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshes[0].weightsSSBO);
-}*/
-
-void Model::UpdateAnimation(float time) {
+    if (!loaded) return;
     auto it = meshes[0].morphAnimations.find(0); // Assume mesh index 0
     if (it == meshes[0].morphAnimations.end()) return;
 

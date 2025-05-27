@@ -53,6 +53,7 @@ std::thread pythonThread;// Face_reconstruction thread
 std::atomic<bool> shouldRunPython(false);
 std::string pendingPythonPath;
 bool pythonThreadRunning = false; 
+bool done_reconstruction = true;
 std::thread g_TextureThread;//Textures_loading thread
 std::atomic<bool> textureUpdateRequested(false);
 // Global atomic status variable to track progress inside the thread
@@ -83,7 +84,9 @@ static Shader shader;
 static Model model;
 std::string currentShaderVertexPath;
 std::string currentShaderFragmentPath;
-std::string currentModelPath = "Animation1.glb";
+std::string currentModelPath;
+std::string reconstructModelPath;
+
 
 //Default Input Dir
 std::string GetDesktopPath() {
@@ -249,10 +252,14 @@ int main()
         glfwMakeContextCurrent(window);
         gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
         shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-        model = Model("Animation1.glb", shader);
+        //model = Model("Animation1.glb", shader);
         //static Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
         //static Model model("Animation.glb");
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        stbi_set_flip_vertically_on_load(true); // Flip if needed
+
         glfwSwapInterval(1); // Enable vsync
 
         // Set dark background color
@@ -334,6 +341,8 @@ int main()
 
                 if(cur == total){
                     shouldRunPython = false;
+                    pythonThreadRunning = false;
+                    //done_reconstruction = false;
                 }
 
 
@@ -374,7 +383,8 @@ int main()
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             UpdateFacialTracking();
-            UpdateFacialReconstruction("Animation1.glb");
+
+            UpdateFacialReconstruction(reconstructModelPath);
 
             
             // Your main UI
@@ -440,6 +450,8 @@ int main()
                     DeleteAllTextures(trackingTextures, sortedTrackingKeys);
                     lastPreviewPath = "";
                     lastTrackingPath = "";
+                    reconstructModelPath = "";
+
                     try {
                         if (std::filesystem::exists(targetDir)) {
                             std::filesystem::remove_all(targetDir);
@@ -470,6 +482,8 @@ int main()
                 
                                 std::cout << "Running in thread with file: " << capturedPath << std::endl;
                                 runPythonConstruct(capturedPath);
+                                reconstructModelPath = "Animation1.glb";
+
                                 std::cout << "Successfully constructed the face model.\n";
                                 std::cout << "All done!" << std::endl;
                             }
@@ -480,7 +494,8 @@ int main()
                             std::cerr << "Unknown exception in Python thread!\n";
                         }
                         
-                        pythonThreadRunning = false;
+                        //pythonThreadRunning = false;
+                        
                         //shouldRunPython = false;
                     });
                 
@@ -488,7 +503,9 @@ int main()
                     
                 }
                 // ---------- Overlay Progress Bar ----------
-                if (shouldRunPython) {
+                //if (shouldRunPython) {
+                if (!done_reconstruction) {
+                
                     //std::cout <<"Overlay block running!\n";
                     ImGui::SetNextWindowPos(ImVec2(0, 0));
                     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
@@ -602,6 +619,7 @@ void UpdateFacialTracking()
             selectedFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
             Last_selectedFilePath = selectedFilePath;
             shouldRunPython = true;
+            done_reconstruction = false;
             pendingPythonPath = selectedFilePath;
             update_progress(0,0);
             prevCur = 0;
@@ -1264,11 +1282,16 @@ void UpdateFacialReconstruction(const std::string& modelPath){
     
     //shader = Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     if(modelPath != currentModelPath){
-        //model = Model("Animation.glb");
-        model = Model(modelPath.c_str(), shader);
-        currentModelPath = modelPath;
-    }
-    
+        if (modelPath.empty()) {
+            currentModelPath = modelPath;
+            model = Model();  // Default constructor
+            //done_reconstruction = false;  // or whatever logic fits
+        } else if (!modelPath.empty()) {
+            model = Model(modelPath.c_str(), shader);  // Load the new model
+            currentModelPath = modelPath;
+            done_reconstruction = true;
+        }
+    } 
 }
 
 void RenderFacialReconstructionTab() {

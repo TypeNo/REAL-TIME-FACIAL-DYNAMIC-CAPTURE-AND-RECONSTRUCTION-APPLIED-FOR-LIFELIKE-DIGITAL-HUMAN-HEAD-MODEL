@@ -58,5 +58,6 @@ private:
     std::vector<Mesh> meshes;
     Shader *shader = nullptr;
     std::vector<float> morphWeights; // store this somewhere in your class
+    bool loaded;
     
 };

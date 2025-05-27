@@ -56,7 +56,7 @@ GLuint LoadTextureFromFile(const char* filename)
 
 GLuint LoadTextureFromMemory(unsigned char* data, int size) {
     int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // Flip if needed
+    //stbi_set_flip_vertically_on_load(true); // Flip if needed
 
     std::cout << "[LoadTextureFromMemory] Loading texture from memory... Size: " << size << " bytes\n";
 
