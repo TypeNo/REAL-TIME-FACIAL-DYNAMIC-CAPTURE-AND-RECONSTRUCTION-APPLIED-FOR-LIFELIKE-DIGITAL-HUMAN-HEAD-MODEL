@@ -7,6 +7,7 @@
 int current_progress = 0;
 int total_progress = 0;
 std::string animation_model_path = "";
+float FPS = .0;
 
 extern "C" __declspec(dllexport) void update_progress(int current, int total) {
     current_progress = current;
@@ -32,3 +33,13 @@ extern "C" __declspec(dllexport) void update_model_path(std::string path) {
 extern "C" __declspec(dllexport) const char* get_model_path() {
     return animation_model_path.c_str();
 }
+
+extern "C" __declspec(dllexport) float get_FPS() {
+    return FPS;
+}
+
+extern "C" __declspec(dllexport) void update_FPS(float framerate) {
+    FPS= framerate;
+    printf("[C++] update_FPS called: %f\n", FPS);
+}
+

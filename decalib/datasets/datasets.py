@@ -84,6 +84,7 @@ class TestData(Dataset):
             self.imagepath_list = [testpath]
         elif os.path.isfile(testpath) and (testpath[-3:] in ['mp4', 'csv', 'vid', 'ebm']):
             self.imagepath_list = video2sequence(testpath, sample_step)
+            self.video_fps = get_video_fps(testpath)
         else:
             print(f'please check the test path: {testpath}')
             exit()
@@ -169,3 +170,13 @@ class TestData(Dataset):
                 'original_image': torch.tensor(image.transpose(2,0,1)).float(),
                 'imageinputname': self.imageinputname
                 }
+    
+
+def get_video_fps(path):
+    cap = cv2.VideoCapture(path)
+    if not cap.isOpened():
+        print(f"Failed to open video: {path}")
+        return None
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    cap.release()
+    return fps

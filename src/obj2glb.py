@@ -26,7 +26,10 @@ def load_image_bytes(image_path):
     with open(image_path, "rb") as f:
         return f.read()
 
-def main(input_root, frame_dir, output_glb):
+def main(input_root, frame_dir, output_glb, FPS):
+    # === Input Properties ===
+    framerate = FPS
+    
     # === Load .obj sequence ===
     input_root = input_root
     frame_dir = frame_dir
@@ -233,7 +236,7 @@ def main(input_root, frame_dir, output_glb):
         # === Animation with one channel for all weights ===
         # Keyframe times
         #time_step = 60.0/ (frame_count-1)
-        time_data = np.linspace(60.0 / frame_count, 60.0, num=frame_count - 1, dtype=np.float32)
+        time_data = np.linspace(1 / framerate, frame_count / framerate, num=frame_count - 1, dtype=np.float32)
         #time_data = np.arange(frame_count - 1, dtype=np.float32)*time_step
         time_bytes = time_data.tobytes()
 
@@ -296,5 +299,7 @@ if __name__ == "__main__":
     parser.add_argument('--input_root', type=str, required=True, help='Base directory containing folders with obj frames')
     parser.add_argument('--frame_dir', type=str, required=True, help='Temporary directory to gather .obj frames for GLB conversion')
     parser.add_argument('--output_glb', type=str, required=True, help='Path to save the output .glb')
+    parser.add_argument('--FPS', type=float, default=30.0, help='Animation framerate (default: 30.0)')
     args = parser.parse_args()
-    main(args.input_root, args.frame_dir ,args.output_glb)
+    
+    main(args.input_root, args.frame_dir, args.output_glb, args.FPS)

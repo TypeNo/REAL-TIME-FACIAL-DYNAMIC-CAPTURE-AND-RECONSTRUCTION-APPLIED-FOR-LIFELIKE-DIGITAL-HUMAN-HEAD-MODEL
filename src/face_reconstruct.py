@@ -69,6 +69,11 @@ def main(args):
 
     # load test images 
     testdata = datasets.TestData(args.inputpath, iscrop=args.iscrop, face_detector=args.detector, sample_step=args.sample_step)
+    if testdata.video_fps is not None:
+        print(f"Video framerate: {testdata.video_fps} FPS")
+        mybridge.update_FPS(testdata.video_fps)
+    else:
+        print("Input is not a video, or FPS could not be determined.")
 
     # run DECA
     deca_cfg.model.use_tex = args.useTex
@@ -175,7 +180,7 @@ def main(args):
     frame_dir = os.path.join(savefolder, inputname, 'frames_model')
     output_glb = os.path.join(savefolder, inputname, 'animation', 'dynamic_animation.glb')
     
-    obj2glb.main(model_dir, frame_dir, output_glb)
+    obj2glb.main(model_dir, frame_dir, output_glb, testdata.video_fps or 30.0)
     
     mybridge.update_model_path(output_glb)
 
