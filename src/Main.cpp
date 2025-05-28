@@ -133,9 +133,10 @@ static GLuint defaultTexture = 0;
 float playbackFPS = 30.0f;            // Target playback rate
 static size_t currentFrameIndex = 0;
 static double frameDuration = 1.0 / playbackFPS;
+bool isFrameDurationInitialized = false;
 static double lastTime = 0.0;
 static double currentTime = 0.0;
-
+float alpha;
 
 //--------------------
 //Input Directory Configuration-----
@@ -283,6 +284,17 @@ int main()
                
                 cur = get_current_progress();
                 total = get_total_progress();
+                if (!isFrameDurationInitialized && total != 0) {
+                    float fps = get_FPS();
+                    if (fps <= 0.0f) {
+                        std::cerr << "Error: get_FPS() returned non-positive value: " << fps << std::endl;
+                    } else {
+                        frameDuration = 1.0f / fps;
+                        isFrameDurationInitialized = true;
+                        std::cout << "frameDuration initialized to: " << frameDuration << " (FPS = " << fps << ")" << std::endl;
+                    }
+                    isFrameDurationInitialized = true;
+                }
             }
 
             py::gil_scoped_release release; // This releases the GIL for this scope   
@@ -623,6 +635,7 @@ void UpdateFacialTracking()
             Last_selectedFilePath = selectedFilePath;
             shouldRunPython = true;
             done_reconstruction = false;
+            isFrameDurationInitialized = false;
             pendingPythonPath = selectedFilePath;
             update_progress(0,0);
             prevCur = 0;
@@ -718,15 +731,19 @@ void RenderFacialTrackingUI()
 
     ImGui::BeginChild("RightSection", ImVec2(0, 0), true);
     {
-        ImGui::Text("[Capture Source]");
-
+        // Section Header
+        ImGui::TextColored(ImVec4(0.9f, 0.7f, 0.2f, 1.0f), "Capture Source");
+        ImGui::Spacing();
+    
+        // File Selection
         ImGui::BeginGroup();
-        if (ImGui::Button("Choose File")) {
+        float buttonWidth = ImGui::GetContentRegionAvail().x;
+        if (ImGui::Button("Select File...", ImVec2(buttonWidth, 0))) {
             IGFD::FileDialogConfig config;
             config.path = GetDesktopPath();
             config.countSelectionMax = 1;
             config.flags = ImGuiFileDialogFlags_Modal;
-
+    
             ImGuiFileDialog::Instance()->OpenDialog(
                 "ChooseCapture",
                 "Select Capture Source",
@@ -734,22 +751,30 @@ void RenderFacialTrackingUI()
                 config
             );
         }
-        ImGui::SameLine();
-
-        float availableWidth = ImGui::GetContentRegionAvail().x;
-        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + availableWidth);
-        ImGui::TextWrapped("%s", selectedFilePath.empty() ? "<No file selected>" : selectedFilePath.c_str());
-        ImGui::PopTextWrapPos();
+    
+        ImGui::Spacing();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+        ImGui::TextWrapped("%s", selectedFilePath.empty() ? "< No file selected >" : selectedFilePath.c_str());
+        ImGui::PopStyleColor();
         ImGui::EndGroup();
-
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
+    
+        // Divider (Minimal style)
+        ImVec2 start = ImGui::GetCursorScreenPos();
+        ImVec2 end = ImVec2(start.x + ImGui::GetContentRegionAvail().x, start.y + 1.0f);
+        ImGui::GetWindowDrawList()->AddLine(start, end, IM_COL32(80, 80, 80, 100));
+        ImGui::Dummy(ImVec2(0.0f, 6.0f));
+    
+        // Frame Range Inputs
+        ImGui::BeginGroup();
+        ImGui::Text("Frame Range to Process:");
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
         static int startFrame = 0, endFrame = 464;
-        ImGui::InputInt("Start Frame to Process", &startFrame);
-        ImGui::InputInt("End Frame to Process", &endFrame);
+        ImGui::InputInt("##StartFrame", &startFrame); // Hidden label
+        ImGui::InputInt("##EndFrame", &endFrame);
+        ImGui::PopItemWidth();
+        ImGui::EndGroup();
     }
+    
     ImGui::EndChild();
 }
 
@@ -1169,12 +1194,18 @@ bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bo
     const float minorTickH    = 6.0f;
 
     // -- Frame Update --
+    currentTime = ImGui::GetTime();
+    double delta = currentTime - lastTime;
+    
     if (autoPlay && totalFrames > 0) {
-        double currentTime = ImGui::GetTime();
-        if (currentTime - lastTime >= frameDuration) {
+        if (delta >= frameDuration) {
             currentFrame = (currentFrame + 1) % totalFrames;
             lastTime = currentTime;
+            delta = 0.0; // reset delta so alpha doesn't overshoot
         }
+    
+        alpha = static_cast<float>(delta / frameDuration);
+        alpha = std::clamp(alpha, 0.0f, 1.0f);
     }
 
     // --- Layout ---
@@ -1298,6 +1329,7 @@ void UpdateFacialReconstruction(const std::string& modelPath){
 }
 
 void RenderFacialReconstructionTab() {
+    static int animationMode = 0; // 0 = Dynamic Capture, 1 = Predefined Expression
     // Get the total width and set the first column to 70% of it
     float totalWidth = ImGui::GetContentRegionAvail().x;
     ImGui::Columns(2, nullptr, true);
@@ -1324,7 +1356,42 @@ void RenderFacialReconstructionTab() {
     ImGui::NextColumn();
 
     // --- Second Column: Manager Tabs or tools (30%) ---
-    ImGui::Text("Manager Tabs content goes here...");
+    float buttonWidth = ImGui::GetColumnWidth();
+    ImVec2 fullSize = ImVec2(buttonWidth - ImGui::GetStyle().ItemSpacing.x, 32);
+
+    ImGui::BeginChild("AnimationModeChild", ImVec2(0, 0), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+
+    ImGui::TextDisabled("Animation Mode");
+    ImGui::Spacing();
+
+    // Live Capture button
+    if (animationMode == 0)
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 1.0f, 1.0f));
+    else
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_Button));
+
+    if (ImGui::Button("Live Capture", fullSize))
+        animationMode = 0;
+
+    ImGui::PopStyleColor();
+    ImGui::Spacing();
+
+    // Preset Expression button
+    if (animationMode == 1)
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 1.0f, 1.0f));
+    else
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_Button));
+
+    if (ImGui::Button("Expression Control", fullSize))
+        animationMode = 1;
+
+    ImGui::PopStyleColor();
+
+    ImGui::Spacing();
+    ImGui::Dummy(ImVec2(0.0f, 1.0f)); // thin divider-like spacing
+    ImGui::Spacing();
+
+    ImGui::EndChild();
 
     ImGui::Columns(1);  // Reset column layout
 }
@@ -1357,7 +1424,8 @@ void DrawModelView() {
     // Update morph animation
     float time = glfwGetTime(); // or your time source
     //float time = ImGui::GetTime(); // or your time source
-    model.UpdateAnimation(time);
+    //model.UpdateAnimation(time);
+    model.UpdateAnimationWithFrame(currentFrameIndex, alpha);
     
     shader.use();
     shader.setMat4("model", modelMatrix);

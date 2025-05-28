@@ -24,6 +24,7 @@ from skimage.io import imread, imsave
 from skimage.transform import estimate_transform, warp, resize, rescale
 from glob import glob
 import scipy.io
+import Retinex
 
 from . import detectors
 
@@ -82,6 +83,7 @@ class TestData(Dataset):
             self.imagepath_list = glob(testpath + '/*.jpg') +  glob(testpath + '/*.png') + glob(testpath + '/*.bmp')
         elif os.path.isfile(testpath) and (testpath[-3:] in ['jpg', 'png', 'bmp']):
             self.imagepath_list = [testpath]
+            self.video_fps = 30.0
         elif os.path.isfile(testpath) and (testpath[-3:] in ['mp4', 'csv', 'vid', 'ebm']):
             self.imagepath_list = video2sequence(testpath, sample_step)
             self.video_fps = get_video_fps(testpath)
@@ -127,6 +129,12 @@ class TestData(Dataset):
             image = image[:,:,None].repeat(1,1,3)
         if len(image.shape) == 3 and image.shape[2] > 3:
             image = image[:,:,:3]
+
+        #image = Retinex.msrcr(image)  # Retinex enhancement
+        #ori_image = image.copy()
+        #image = Retinex.msrcr_face_preserving(image, ori_image)
+        #image = Retinex.msrcr_skin_preserving(image)
+        #image = Retinex.retinex_on_luminance((image).astype(np.uint8))
 
         h, w, _ = image.shape
         if self.iscrop:

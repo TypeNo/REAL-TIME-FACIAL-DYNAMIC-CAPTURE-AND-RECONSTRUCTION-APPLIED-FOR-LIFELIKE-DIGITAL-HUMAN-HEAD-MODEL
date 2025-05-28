@@ -48,7 +48,8 @@ public:
             return meshes[meshIndex].textureID;
         }
         return 0; // Invalid index or no texture
-    }     
+    }
+    void UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames);     
 
 private:
     void loadModel(const std::string& path);

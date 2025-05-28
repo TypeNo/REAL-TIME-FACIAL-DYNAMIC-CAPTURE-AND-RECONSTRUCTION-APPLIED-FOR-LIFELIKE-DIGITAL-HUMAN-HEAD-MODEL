@@ -191,6 +191,49 @@ void Model::UpdateAnimation(float time) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshes[0].weightsSSBO);
 }
 
+void Model::UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames) {
+    if (!loaded) return;
+
+    auto it = meshes[0].morphAnimations.find(0);
+    if (it == meshes[0].morphAnimations.end()) return;
+
+    const auto& keys = it->second;
+    if (keys.empty()) return;
+
+    size_t morphTargetsCount = morphWeights.size();
+    size_t totalFrames = keys.size();
+
+    if (totalFrames < 2) return;
+
+    // Clamp frameIndex to valid range just in case
+    frameIndex = frameIndex % totalFrames;
+    int frame2 = (frameIndex + 1) % totalFrames;
+
+    // Optional: you can retrieve times t1 and t2 if needed
+    float t1 = keys[frameIndex].time;
+    float t2 = keys[frame2].time;
+
+    float alpha = alphaBetweenFrames;
+    alpha = std::clamp(alpha, 0.0f, 1.0f);
+
+    // Safety check
+    if (keys[frameIndex].weights.size() != morphTargetsCount || keys[frame2].weights.size() != morphTargetsCount) {
+        // Handle error, or early return
+        return;
+    }
+
+    for (size_t j = 0; j < morphTargetsCount; ++j) {
+        float w1 = keys[frameIndex].weights[j];
+        float w2 = keys[frame2].weights[j];
+        morphWeights[j] = (1.0f - alpha) * w1 + alpha * w2;
+    }
+
+    // Upload morphWeights to GPU
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, meshes[0].weightsSSBO);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, morphWeights.size() * sizeof(float), morphWeights.data());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshes[0].weightsSSBO);
+}
+
 
 void Model::loadModel(const std::string& path) {
     Assimp::Importer importer;
