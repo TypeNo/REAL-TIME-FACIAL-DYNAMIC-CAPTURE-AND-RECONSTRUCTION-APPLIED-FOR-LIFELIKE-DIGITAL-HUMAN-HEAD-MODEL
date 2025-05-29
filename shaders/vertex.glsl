@@ -45,7 +45,7 @@ void main() {
         vec3 posDelta = morphData[baseIndex].xyz;
         vec3 normalDelta = morphData[baseIndex + 1].xyz;
 
-        float weight = clamp(weights[i], 0.0, 1.0);
+        float weight = clamp(weights[i], -1.0, 1.0);
         if(weight != 0.0 ){
             debugPositions[gl_VertexID] = vec4(posDelta, int(baseIndex));
         }

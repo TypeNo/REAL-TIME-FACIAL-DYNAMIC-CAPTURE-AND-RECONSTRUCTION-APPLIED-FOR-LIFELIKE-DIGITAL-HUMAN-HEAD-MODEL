@@ -82,11 +82,14 @@ float lastX = 0, lastY = 0;
 GLuint fbo, colorTex, depthRb;
 static Shader shader;
 static Model model;
+static Model model2;
 std::string currentShaderVertexPath;
 std::string currentShaderFragmentPath;
 std::string currentModelPath;
 std::string reconstructModelPath;
-
+std::string reconstructModelPath2;
+static int animationMode = 0; // 0 = Dynamic Capture, 1 = Predefined Expression
+static float expressions[50] = {}; // range [-1, 1]
 
 //Default Input Dir
 std::string GetDesktopPath() {
@@ -463,6 +466,8 @@ int main()
                     lastPreviewPath = "";
                     lastTrackingPath = "";
                     reconstructModelPath = "";
+                    reconstructModelPath2 = "";
+                    std::memset(expressions, 0, sizeof(expressions));
                     currentFrameIndex = 0;
 
 
@@ -498,6 +503,7 @@ int main()
                                 runPythonConstruct(capturedPath);
                                 //reconstructModelPath = "Animation1.glb";
                                 reconstructModelPath = get_model_path();
+                                reconstructModelPath2 = get_expression_path();
                                 
                                 std::cout << "Successfully constructed the face model.\n";
                                 std::cout << "All done!" << std::endl;
@@ -1319,9 +1325,15 @@ void UpdateFacialReconstruction(const std::string& modelPath){
         if (modelPath.empty()) {
             currentModelPath = modelPath;
             model = Model();  // Default constructor
+            model2 = Model();
             //done_reconstruction = false;  // or whatever logic fits
         } else if (!modelPath.empty()) {
             model = Model(modelPath.c_str(), shader);  // Load the new model
+            // Construct manual_animation.glb path
+            fs::path originalPath(modelPath);
+            fs::path modifiedPath = originalPath.parent_path() / "manual_animation.glb";
+
+            model2 = Model(modifiedPath.string().c_str(), shader);
             currentModelPath = modelPath;
             done_reconstruction = true;
         }
@@ -1329,7 +1341,6 @@ void UpdateFacialReconstruction(const std::string& modelPath){
 }
 
 void RenderFacialReconstructionTab() {
-    static int animationMode = 0; // 0 = Dynamic Capture, 1 = Predefined Expression
     // Get the total width and set the first column to 70% of it
     float totalWidth = ImGui::GetContentRegionAvail().x;
     ImGui::Columns(2, nullptr, true);
@@ -1370,7 +1381,7 @@ void RenderFacialReconstructionTab() {
     else
         ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_Button));
 
-    if (ImGui::Button("Live Capture", fullSize))
+    if (ImGui::Button("Real Time Capture", fullSize))
         animationMode = 0;
 
     ImGui::PopStyleColor();
@@ -1389,8 +1400,63 @@ void RenderFacialReconstructionTab() {
 
     ImGui::Spacing();
     ImGui::Dummy(ImVec2(0.0f, 1.0f)); // thin divider-like spacing
+    // --- Add Export button here ---
+    ImGui::Spacing();
+    if (ImGui::Button("Export", fullSize))
+    {
+        // Call your export function here, e.g.:
+        // model2.Export("output_path.glb");
+        // Or toggle an export flag to be handled outside this function
+    }
     ImGui::Spacing();
 
+    if (animationMode == 1)
+    {
+        bool expressionChanged = false;     // Track changes
+    
+        ImGui::TextDisabled("Expression Sliders");
+        ImGui::Spacing();
+
+        // Reset Button
+        if (ImGui::Button("Reset All")) {
+            for (int i = 0; i < 100; ++i)
+                expressions[i] = 0.0f;
+            expressionChanged = true;
+        }
+    
+        float childHeight = ImGui::GetContentRegionAvail().y;
+        ImGui::BeginChild("ExpressionControls", ImVec2(0, childHeight), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+
+        // Optional: consistent fixed width for label area
+        const float labelWidth = 120.0f;
+        const float spacing = 12.0f;  // Space between label and slider
+    
+        for (int i = 0; i < 50; ++i)
+        {
+            std::string label = "Expression " + std::to_string(i + 1);
+            ImGui::PushID(i);
+    
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextUnformatted(label.c_str());
+            ImGui::SameLine(labelWidth + spacing);  // Apply consistent spacing
+    
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::SliderFloat("##slider", &expressions[i], -1.0f, 1.0f))
+                expressionChanged = true;
+            ImGui::PopItemWidth();
+    
+            ImGui::PopID();
+        }
+    
+        ImGui::EndChild();
+    
+        // Apply changes to model if any slider was touched
+        if (expressionChanged)
+        {
+            model2.ExpressionControl(expressions);
+        }
+    }
+    
     ImGui::EndChild();
 
     ImGui::Columns(1);  // Reset column layout
@@ -1422,10 +1488,9 @@ void DrawModelView() {
     //static Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
     //static Model model("Animation.glb");
     // Update morph animation
-    float time = glfwGetTime(); // or your time source
+    //float time = glfwGetTime(); // or your time source
     //float time = ImGui::GetTime(); // or your time source
     //model.UpdateAnimation(time);
-    model.UpdateAnimationWithFrame(currentFrameIndex, alpha);
     
     shader.use();
     shader.setMat4("model", modelMatrix);
@@ -1437,7 +1502,14 @@ void DrawModelView() {
     shader.setVec3("viewPos", camera.Position);
     shader.setVec3("lightPos", camera.Position + camera.Front * 5.0f);  // dynamic lig
     shader.setInt("diffuseMap", 0);  // Bind to texture unit 0
-    model.Draw();
+    if(animationMode == 0){
+        model.UpdateAnimationWithFrame(currentFrameIndex, alpha);
+        model.Draw();
+    }
+    else{
+        model2.Draw();
+    }
+
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -1445,12 +1517,18 @@ void DrawModelView() {
     ImGui::Image((ImTextureID)(intptr_t)colorTex, viewportSize, ImVec2(0, 1), ImVec2(1, 0)); // Flip vertically
 
     // Mouse controls
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-        ImVec2 delta = ImGui::GetMouseDragDelta();
-        camera.ProcessMouseMovement(delta.x, delta.y);
-        ImGui::ResetMouseDragDelta();
-    }
-    camera.ProcessMouseScroll(io.MouseWheel);
+    if (ImGui::IsItemHovered()) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            ImVec2 delta = ImGui::GetMouseDragDelta();
+            camera.ProcessMouseMovement(delta.x, delta.y);
+            ImGui::ResetMouseDragDelta();
+        }
+
+        // Only process scroll if hovered
+        if (io.MouseWheel != 0.0f) {
+            camera.ProcessMouseScroll(io.MouseWheel);
+        }
+    }    
 }
 
 void InitFramebuffer(int width, int height) {

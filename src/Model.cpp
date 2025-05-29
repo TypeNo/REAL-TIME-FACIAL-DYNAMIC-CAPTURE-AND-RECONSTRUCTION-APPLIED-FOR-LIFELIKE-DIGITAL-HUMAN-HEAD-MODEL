@@ -1,6 +1,7 @@
 // src/Model.cpp
 #include "Model.hpp"
 #include <assimp/Importer.hpp>
+#include <assimp/Exporter.hpp>
 #include <assimp/postprocess.h>
 #include <iostream>
 #include "TextureLoader.hpp"
@@ -234,10 +235,25 @@ void Model::UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshes[0].weightsSSBO);
 }
 
+void Model::ExpressionControl(const float* Expressions){
+    if (!loaded) return;
+
+    size_t morphTargetsCount = morphWeights.size();
+
+    for (size_t j = 0; j < morphTargetsCount; ++j)
+    {
+        morphWeights[j] = std::clamp(Expressions[j], -1.0f, 1.0f);
+    }
+
+    // Upload updated weights to GPU
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, meshes[0].weightsSSBO);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, morphWeights.size() * sizeof(float), morphWeights.data());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshes[0].weightsSSBO);
+}
 
 void Model::loadModel(const std::string& path) {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path,
+        scene = importer.ReadFile(path,
         aiProcess_Triangulate |
         //aiProcess_FlipUVs |
         aiProcess_CalcTangentSpace |
@@ -556,4 +572,24 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     
     return result;
+}
+
+void Model::ExportModel(const std::string& inputPath, const std::string& outputPath, const std::string& exportFormat) {
+    Assimp::Importer importer;
+    const aiScene* export_scene = scene;
+
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+        std::cerr << "Assimp import error: " << importer.GetErrorString() << std::endl;
+        return;
+    }
+
+    Assimp::Exporter exporter;
+    const aiExportFormatDesc* format = exporter.GetExportFormatDescription(0);
+
+    // Export using the given export format (e.g., "obj", "glb2")
+    if (exporter.Export(scene, exportFormat.c_str(), outputPath) != AI_SUCCESS) {
+        std::cerr << "Assimp export error: " << exporter.GetErrorString() << std::endl;
+    } else {
+        std::cout << "Export successful to: " << outputPath << std::endl;
+    }
 }

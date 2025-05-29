@@ -25,6 +25,8 @@ import ctypes
 import os
 from ctypes import cdll
 import obj2glb
+import face_transfer
+
 # Load the DLL (ensure path is correct)
 dll_path = os.path.abspath("build/bin/Release/progress_shared.dll")
 progress = ctypes.CDLL(dll_path)
@@ -98,6 +100,8 @@ def main(args):
         images = testdata[i]['image'].to(device)[None,...]   
         with torch.no_grad():
             codedict = deca.encode(images)
+            if(i == 0):
+                id_codedict = codedict
             opdict, visdict = deca.decode(codedict) #tensor
             if args.render_orig:
                 tform = testdata[i]['tform'][None, ...]
@@ -183,6 +187,18 @@ def main(args):
     obj2glb.main(model_dir, frame_dir, output_glb, testdata.video_fps or 30.0)
     
     mybridge.update_model_path(output_glb)
+
+    new_args = argparse.Namespace(
+        image_path=args.inputpath,
+        savefolder=os.path.join(savefolder, inputname),
+        device='cuda',
+        rasterizer_type='pytorch3d',
+        iscrop=True,
+        detector='fan',
+        useTex=True
+    )
+
+    face_transfer.main(new_args, id_codedict)
 
 
 if __name__ == '__main__':

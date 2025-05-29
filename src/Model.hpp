@@ -49,7 +49,9 @@ public:
         }
         return 0; // Invalid index or no texture
     }
-    void UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames);     
+    void UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames);
+    void ExpressionControl(const float* Expressions);
+    void ExportModel(const std::string& inputPath, const std::string& outputPath, const std::string& exportFormat);   
 
 private:
     void loadModel(const std::string& path);
@@ -60,5 +62,6 @@ private:
     Shader *shader = nullptr;
     std::vector<float> morphWeights; // store this somewhere in your class
     bool loaded;
+    const aiScene* scene = nullptr;  // ← your new private variable
     
 };

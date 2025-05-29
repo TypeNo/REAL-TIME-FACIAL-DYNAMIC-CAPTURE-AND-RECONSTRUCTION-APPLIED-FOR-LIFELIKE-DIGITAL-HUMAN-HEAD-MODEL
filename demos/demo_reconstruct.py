@@ -50,6 +50,7 @@ def main(args):
         images = testdata[i]['image'].to(device)[None,...]
         with torch.no_grad():
             codedict = deca.encode(images)
+
             opdict, visdict = deca.decode(codedict) #tensor
             if args.render_orig:
                 tform = testdata[i]['tform'][None, ...]
