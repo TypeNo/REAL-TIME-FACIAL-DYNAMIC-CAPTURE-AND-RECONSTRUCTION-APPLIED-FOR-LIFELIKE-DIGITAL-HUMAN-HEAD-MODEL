@@ -51,7 +51,9 @@ public:
     }
     void UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames);
     void ExpressionControl(const float* Expressions);
-    void ExportModel(const std::string& inputPath, const std::string& outputPath, const std::string& exportFormat);   
+    void ExportModel(const std::string& FrameDir ,const std::string& outputPath, float FPS, int start_frame = 0, int end_frame = 0);
+    void ExportModel2(const std::string& outputPath);  
+    bool loaded;
 
 private:
     void loadModel(const std::string& path);
@@ -61,7 +63,7 @@ private:
     std::vector<Mesh> meshes;
     Shader *shader = nullptr;
     std::vector<float> morphWeights; // store this somewhere in your class
-    bool loaded;
-    const aiScene* scene = nullptr;  // ← your new private variable
+    //const aiScene* scene = nullptr;  // ← your new private variable
+    std::string ModelPath = "";
     
 };

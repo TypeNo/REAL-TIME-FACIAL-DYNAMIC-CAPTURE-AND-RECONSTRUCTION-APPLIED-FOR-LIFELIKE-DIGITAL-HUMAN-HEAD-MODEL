@@ -83,6 +83,10 @@ def main(input_root, frame_dir, output_glb, FPS):
     if has_animation :
         for i, frame in enumerate(frame_paths[1:]):
             mesh = trimesh.load(frame, process=False, maintain_order=True)
+            if mesh.vertices.shape != base_vertices.shape:
+                raise ValueError(f"Frame {i+1} vertex count mismatch: {mesh.vertices.shape} vs {base_vertices.shape}")
+            if not np.array_equal(mesh.faces, base_mesh.faces):
+                raise ValueError(f"Topology mismatch in frame {i+1}")
             delta = mesh.vertices - base_vertices
             morph_deltas.append(delta.astype(np.float32))
 
@@ -100,7 +104,8 @@ def main(input_root, frame_dir, output_glb, FPS):
     gltf.nodes = []
     gltf.scenes = [Scene(nodes=[0])]
     gltf.scene = 0
-    gltf.animations = []
+    if not has_animation:
+        gltf.animations = []
 
     buffer_data = bytearray()
     offset = 0
@@ -116,6 +121,11 @@ def main(input_root, frame_dir, output_glb, FPS):
         count=len(base_vertices),
         type="VEC3"
     ))
+    # Align to 4 bytes
+    if offset % 4 != 0:
+        padding = 4 - (offset % 4)
+        buffer_data += b'\x00' * padding
+        offset += padding
     offset += len(base_pos_bytes)
     buffer_data += base_pos_bytes
 
@@ -130,6 +140,11 @@ def main(input_root, frame_dir, output_glb, FPS):
         count=len(base_normals),
         type="VEC3"
     ))
+    # Align to 4 bytes
+    if offset % 4 != 0:
+        padding = 4 - (offset % 4)
+        buffer_data += b'\x00' * padding
+        offset += padding
     offset += len(base_norm_bytes)
     buffer_data += base_norm_bytes
 
@@ -144,6 +159,11 @@ def main(input_root, frame_dir, output_glb, FPS):
         count=len(base_uvs),
         type="VEC2"
     ))
+    # Align to 4 bytes
+    if offset % 4 != 0:
+        padding = 4 - (offset % 4)
+        buffer_data += b'\x00' * padding
+        offset += padding
     offset += len(base_uv_bytes)
     buffer_data += base_uv_bytes
     
@@ -158,6 +178,11 @@ def main(input_root, frame_dir, output_glb, FPS):
         count=len(faces) * 3,
         type="SCALAR"
     ))
+    # Align to 4 bytes
+    if offset % 4 != 0:
+        padding = 4 - (offset % 4)
+        buffer_data += b'\x00' * padding
+        offset += padding
     offset += len(face_indices)
     buffer_data += face_indices
 
@@ -167,14 +192,24 @@ def main(input_root, frame_dir, output_glb, FPS):
         for delta in morph_deltas:
             delta_bytes = delta.tobytes()
             gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(delta_bytes), target=ARRAY_BUFFER))
+            #gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(delta_bytes)))
             a_delta = len(gltf.accessors)
+            min_vals = delta.min(axis=0).tolist()
+            max_vals = delta.max(axis=0).tolist()
             gltf.accessors.append(Accessor(
                 bufferView=len(gltf.bufferViews)-1,
                 byteOffset=0,
                 componentType=FLOAT,
                 count=len(delta),
-                type="VEC3"
+                type="VEC3",
+                min=min_vals,
+                max=max_vals
             ))
+            # Align to 4 bytes
+            if offset % 4 != 0:
+                padding = 4 - (offset % 4)
+                buffer_data += b'\x00' * padding
+                offset += padding
             offset += len(delta_bytes)
             buffer_data += delta_bytes
             morph_targets.append(a_delta)
@@ -201,6 +236,11 @@ def main(input_root, frame_dir, output_glb, FPS):
 
             image_indices[key] = len(gltf.textures) - 1
             buffer_data += img_data
+            # Align to 4 bytes
+            if offset % 4 != 0:
+                padding = 4 - (offset % 4)
+                buffer_data += b'\x00' * padding
+                offset += padding
             offset += len(img_data)
         else:
             print(f"⚠️ Image missing: {path}")
@@ -232,6 +272,10 @@ def main(input_root, frame_dir, output_glb, FPS):
     node = Node(mesh=0)
     gltf.nodes.append(node)
 
+    gltf.meshes[0].name = "HeadMesh"
+    gltf.nodes[0].name = "HeadNode"
+
+
     if has_animation :
         # === Animation with one channel for all weights ===
         # Keyframe times
@@ -251,6 +295,11 @@ def main(input_root, frame_dir, output_glb, FPS):
             min=[float(time_data[0])],
             max=[float(time_data[-1])]
         ))
+        # Align to 4 bytes
+        if offset % 4 != 0:
+            padding = 4 - (offset % 4)
+            buffer_data += b'\x00' * padding
+            offset += padding
         offset += len(time_bytes)
         buffer_data += time_bytes
 
@@ -269,6 +318,11 @@ def main(input_root, frame_dir, output_glb, FPS):
             count=weight_data.size,  # total number of scalars
             type="SCALAR"
         ))
+            # Align to 4 bytes
+        if offset % 4 != 0:
+            padding = 4 - (offset % 4)
+            buffer_data += b'\x00' * padding
+            offset += padding
         offset += len(weight_bytes)
         buffer_data += weight_bytes
 
@@ -278,6 +332,320 @@ def main(input_root, frame_dir, output_glb, FPS):
 
         gltf.animations = [Animation(samplers=[sampler], channels=[channel])]
 
+    # === Finalize buffer ===
+    gltf.buffers[0].byteLength = len(buffer_data)
+    gltf.set_binary_blob(buffer_data)
+
+    # Check for unintentional type objects before saving
+    find_type_objects(gltf)
+
+    # Ensure the output directory exists
+    os.makedirs(os.path.dirname(output_glb), exist_ok=True)
+
+    # Save .glb
+    gltf.save_binary(output_glb)
+    print("✅ Exported to {output_path}")
+
+def export_glb(frame_dir, output_glb, FPS, start_frame =0, end_frame=0):
+    print("📦 export_glb called with:")
+    print(f"  🔹 frame_dir    = {frame_dir}")
+    print(f"  🔹 output_glb   = {output_glb}")
+    print(f"  🔹 FPS          = {FPS}")
+    print(f"  🔹 start_frame  = {start_frame}")
+    print(f"  🔹 end_frame    = {end_frame}")
+    # === Input Properties ===
+    framerate = FPS
+    
+    # === Continue with your original GLB conversion logic using frame_dir ===
+    frame_paths = sorted([os.path.join(frame_dir, f) for f in os.listdir(frame_dir) if f.endswith(".obj")])
+
+    # Debug: Show all available frame files
+    print("📂 All Frame Paths:")
+    for i, path in enumerate(frame_paths):
+        print(f"[{i}] {path}")
+
+    if end_frame == 0:
+        end_frame = len(frame_paths) - 1
+
+    selected_frame = frame_paths [start_frame: end_frame]
+
+    # Debug: Show selected frame paths
+    print("✅ Selected Frames for Export:")
+    for i, path in enumerate(selected_frame):
+        print(f"[{start_frame + i}] {path}")
+
+    print(f"🧾 Requested Frame Range: start_frame = {start_frame}, end_frame = {end_frame}")
+    print(f"🧾 Total frames available: {len(frame_paths)}")
+
+    has_animation = len(selected_frame) > 1
+    #if len(frame_paths) < 2:
+        #raise RuntimeError("Need at least 2 frames for morph animation")
+    if not has_animation:
+        print("ℹ️ Only one frame detected — exporting static model without morph animation.")
+
+    # Load base mesh and others
+    base_mesh = trimesh.load(selected_frame[0], process=False, maintain_order=True)
+    print("Has visual:", base_mesh.visual.kind)  # should say 'texture'
+    print("UV shape:", base_mesh.visual.uv.shape)
+    base_vertices = base_mesh.vertices
+    base_normals = base_mesh.vertex_normals  # Vertex normals
+    base_uvs = base_mesh.visual.uv  # UV coordinates
+    base_uvs[:,1] = 1.0 - base_uvs[:,1]
+    faces = base_mesh.faces
+
+    morph_deltas = []
+    if has_animation :
+        for i, frame in enumerate(selected_frame[1:]):
+            mesh = trimesh.load(frame, process=False, maintain_order=True)
+            if mesh.vertices.shape != base_vertices.shape:
+                raise ValueError(f"Frame {i+1} vertex count mismatch: {mesh.vertices.shape} vs {base_vertices.shape}")
+            if not np.array_equal(mesh.faces, base_mesh.faces):
+                raise ValueError(f"Topology mismatch in frame {i+1}")
+            delta = mesh.vertices - base_vertices
+            morph_deltas.append(delta.astype(np.float32))
+
+        morph_deltas = np.array(morph_deltas)  # shape: (num_frames-1, num_vertices, 3)
+        frame_count = morph_deltas.shape[0] + 1
+
+    # === Set up GLTF2 ===
+    gltf = GLTF2()
+    gltf.asset = Asset(version="2.0")
+
+    gltf.buffers = [Buffer(byteLength=0)]
+    gltf.bufferViews = []
+    gltf.accessors = []
+    gltf.meshes = []
+    gltf.nodes = []
+    gltf.scenes = [Scene(nodes=[0])]
+    gltf.scene = 0
+    if not has_animation:
+        gltf.animations = []
+
+    buffer_data = bytearray()
+    offset = 0
+
+    # === Add base position accessor ===
+    base_pos_bytes = base_vertices.astype(np.float32).tobytes()
+    gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(base_pos_bytes), target=ARRAY_BUFFER))
+    a_pos = len(gltf.accessors)
+    gltf.accessors.append(Accessor(
+        bufferView=len(gltf.bufferViews)-1,
+        byteOffset=0,
+        componentType=FLOAT,
+        count=len(base_vertices),
+        type="VEC3"
+    ))
+    # Align to 4 bytes
+    if offset % 4 != 0:
+        padding = 4 - (offset % 4)
+        buffer_data += b'\x00' * padding
+        offset += padding
+    offset += len(base_pos_bytes)
+    buffer_data += base_pos_bytes
+
+    # === Add base normals accessor ===
+    base_norm_bytes = base_normals.astype(np.float32).tobytes()
+    gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(base_norm_bytes), target=ARRAY_BUFFER))
+    a_norm = len(gltf.accessors)
+    gltf.accessors.append(Accessor(
+        bufferView=len(gltf.bufferViews)-1,
+        byteOffset=0,
+        componentType=FLOAT,
+        count=len(base_normals),
+        type="VEC3"
+    ))
+    # Align to 4 bytes
+    if offset % 4 != 0:
+        padding = 4 - (offset % 4)
+        buffer_data += b'\x00' * padding
+        offset += padding
+    offset += len(base_norm_bytes)
+    buffer_data += base_norm_bytes
+
+    # === Add base UVs accessor ===
+    base_uv_bytes = base_uvs.astype(np.float32).tobytes()  # UVs as float32
+    gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(base_uv_bytes), target=ARRAY_BUFFER))
+    a_uv = len(gltf.accessors)
+    gltf.accessors.append(Accessor(
+        bufferView=len(gltf.bufferViews)-1,
+        byteOffset=0,
+        componentType=FLOAT,
+        count=len(base_uvs),
+        type="VEC2"
+    ))
+    # Align to 4 bytes
+    if offset % 4 != 0:
+        padding = 4 - (offset % 4)
+        buffer_data += b'\x00' * padding
+        offset += padding
+    offset += len(base_uv_bytes)
+    buffer_data += base_uv_bytes
+    
+    # === Add face indices accessor ===
+    face_indices = faces.flatten().astype(np.uint16).tobytes()
+    gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(face_indices), target=ELEMENT_ARRAY_BUFFER))
+    a_indices = len(gltf.accessors)
+    gltf.accessors.append(Accessor(
+        bufferView=len(gltf.bufferViews)-1,
+        byteOffset=0,
+        componentType=UNSIGNED_SHORT,
+        count=len(faces) * 3,
+        type="SCALAR"
+    ))
+    # Align to 4 bytes
+    if offset % 4 != 0:
+        padding = 4 - (offset % 4)
+        buffer_data += b'\x00' * padding
+        offset += padding
+    offset += len(face_indices)
+    buffer_data += face_indices
+
+    # === Add morph target accessors ===
+    morph_targets = []
+    if has_animation :
+        for delta in morph_deltas:
+            delta_bytes = delta.tobytes()
+            gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(delta_bytes), target=ARRAY_BUFFER))
+            #gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(delta_bytes)))
+            a_delta = len(gltf.accessors)
+            min_vals = delta.min(axis=0).tolist()
+            max_vals = delta.max(axis=0).tolist()
+            gltf.accessors.append(Accessor(
+                bufferView=len(gltf.bufferViews)-1,
+                byteOffset=0,
+                componentType=FLOAT,
+                count=len(delta),
+                type="VEC3",
+                min=min_vals,
+                max=max_vals
+            ))
+            # Align to 4 bytes
+            if offset % 4 != 0:
+                padding = 4 - (offset % 4)
+                buffer_data += b'\x00' * padding
+                offset += padding
+            offset += len(delta_bytes)
+            buffer_data += delta_bytes
+            morph_targets.append(a_delta)
+
+    # === Load texture and normal maps ===
+    base_name = os.path.splitext(os.path.basename(frame_paths[0]))[0]
+    image_paths = {
+    "baseColor": os.path.join(frame_dir, f"{base_name}.png"),
+    "normalMap": os.path.join(frame_dir, f"{base_name}_normals.png")
+    }
+
+    image_indices = {}
+
+    for key, path in image_paths.items():
+        if os.path.isfile(path):
+            img_data = load_image_bytes(path)
+            gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(img_data)))
+            bv_index = len(gltf.bufferViews) - 1
+
+            image = Image(uri=None, bufferView=bv_index, mimeType="image/png")
+            gltf.images.append(image)
+
+            texture = Texture(source=len(gltf.images) - 1)
+            gltf.textures.append(texture)
+
+            image_indices[key] = len(gltf.textures) - 1
+            buffer_data += img_data
+            # Align to 4 bytes
+            if offset % 4 != 0:
+                padding = 4 - (offset % 4)
+                buffer_data += b'\x00' * padding
+                offset += padding
+            offset += len(img_data)
+        else:
+            print(f"⚠️ Image missing: {path}")
+
+        # === Create material and apply to primitive ===
+    material = Material(
+        pbrMetallicRoughness=PbrMetallicRoughness(
+            baseColorTexture=TextureInfo(index=image_indices.get("baseColor"))
+        ),
+        normalTexture=TextureInfo(index=image_indices.get("normalMap")) if "normalMap" in image_indices else None
+    )
+    gltf.materials.append(material)
+    
+    # === Mesh and Node ===
+    primitive = Primitive(
+        attributes={
+        "POSITION": a_pos,
+        "NORMAL": a_norm,
+        "TEXCOORD_0": a_uv
+        },
+        indices=a_indices,
+        targets=[{POSITION: a} for a in morph_targets] if has_animation else None,
+        material = 0
+    )
+
+    mesh = Mesh(primitives=[primitive], weights=[0.0] * len(morph_targets))
+    gltf.meshes.append(mesh)
+
+    node = Node(mesh=0)
+    gltf.nodes.append(node)
+
+    gltf.meshes[0].name = "HeadMesh"
+    gltf.nodes[0].name = "HeadNode"
+
+
+    if has_animation :
+        # === Animation with one channel for all weights ===
+        # Keyframe times
+        #time_step = 60.0/ (frame_count-1)
+        time_data = np.linspace(1 / framerate, frame_count / framerate, num=frame_count - 1, dtype=np.float32)
+        #time_data = np.arange(frame_count - 1, dtype=np.float32)*time_step
+        time_bytes = time_data.tobytes()
+
+        gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(time_bytes)))
+        a_time = len(gltf.accessors)
+        gltf.accessors.append(Accessor(
+            bufferView=len(gltf.bufferViews)-1,
+            byteOffset=0,
+            componentType=FLOAT,
+            count=len(time_data),
+            type="SCALAR",
+            min=[float(time_data[0])],
+            max=[float(time_data[-1])]
+        ))
+        # Align to 4 bytes
+        if offset % 4 != 0:
+            padding = 4 - (offset % 4)
+            buffer_data += b'\x00' * padding
+            offset += padding
+        offset += len(time_bytes)
+        buffer_data += time_bytes
+
+        # Keyframe weights: each row is a full morph weights vector
+        weight_data = np.zeros((len(time_data), len(morph_targets)), dtype=np.float32)
+        for i in range(len(time_data)):
+            weight_data[i, i] = 1.0  # Only one active morph per frame
+
+        weight_bytes = weight_data.astype(np.float32).tobytes()
+        gltf.bufferViews.append(BufferView(buffer=0, byteOffset=offset, byteLength=len(weight_bytes)))
+        a_weight = len(gltf.accessors)
+        gltf.accessors.append(Accessor(
+            bufferView=len(gltf.bufferViews)-1,
+            byteOffset=0,
+            componentType=FLOAT,
+            count=weight_data.size,  # total number of scalars
+            type="SCALAR"
+        ))
+            # Align to 4 bytes
+        if offset % 4 != 0:
+            padding = 4 - (offset % 4)
+            buffer_data += b'\x00' * padding
+            offset += padding
+        offset += len(weight_bytes)
+        buffer_data += weight_bytes
+
+        # Single animation sampler + channel
+        sampler = AnimationSampler(input=a_time, output=a_weight, interpolation="STEP")
+        channel = AnimationChannel(sampler=0, target={"node": 0, "path": "weights"})
+
+        gltf.animations = [Animation(samplers=[sampler], channels=[channel])]
 
     # === Finalize buffer ===
     gltf.buffers[0].byteLength = len(buffer_data)

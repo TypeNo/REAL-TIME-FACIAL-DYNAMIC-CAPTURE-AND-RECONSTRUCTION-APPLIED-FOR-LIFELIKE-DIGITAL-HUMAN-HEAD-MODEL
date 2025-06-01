@@ -140,6 +140,7 @@ bool isFrameDurationInitialized = false;
 static double lastTime = 0.0;
 static double currentTime = 0.0;
 float alpha;
+static int startFrame = 0, endFrame = 0;
 
 //--------------------
 //Input Directory Configuration-----
@@ -157,9 +158,10 @@ static std::map<std::string, GLuint> trackingTextures;  // Store all tracking te
 static std::vector<GLuint> sortedTrackingKeys;
 static std::map<std::string, GLuint> previewTextures;  // Store all preview textures
 static std::vector<GLuint> sortedPreviewKeys;
-
-
-
+//Export Directory Configuration-----
+static std::string exportFilePath;
+static std::string exportStatusMsg;
+//---------------------
 
 //Configuring Working Directory
 void SetAppWorkingDirectory();
@@ -353,6 +355,8 @@ int main()
             
                     g_TextureThread.detach();
                 }
+                
+
 
                 if(cur == total){
                     shouldRunPython = false;
@@ -467,6 +471,8 @@ int main()
                     lastTrackingPath = "";
                     reconstructModelPath = "";
                     reconstructModelPath2 = "";
+                    startFrame = 0;
+                    endFrame = 0;
                     std::memset(expressions, 0, sizeof(expressions));
                     currentFrameIndex = 0;
 
@@ -507,6 +513,8 @@ int main()
                                 
                                 std::cout << "Successfully constructed the face model.\n";
                                 std::cout << "All done!" << std::endl;
+
+                                endFrame = sortedTrackingKeys.size();
                             }
                 
                         } catch (const std::exception& e) {
@@ -770,15 +778,102 @@ void RenderFacialTrackingUI()
         ImGui::GetWindowDrawList()->AddLine(start, end, IM_COL32(80, 80, 80, 100));
         ImGui::Dummy(ImVec2(0.0f, 6.0f));
     
-        // Frame Range Inputs
+        // Default frame values
+        int defaultStartFrame = 0;
+        int defaultEndFrame = sortedTrackingKeys.size();
+
         ImGui::BeginGroup();
-        ImGui::Text("Frame Range to Process:");
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-        static int startFrame = 0, endFrame = 464;
-        ImGui::InputInt("##StartFrame", &startFrame); // Hidden label
-        ImGui::InputInt("##EndFrame", &endFrame);
+
+        // Section title with subtle uppercase and spacing
+        ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]); // customize your font if available
+        ImGui::TextUnformatted("FRAME RANGE TO PROCESS");
+        ImGui::PopFont();
+
+        ImGui::Spacing();
+
+        // Container with light background and rounded corners
+        ImGui::BeginChild("FrameRangeContainer", ImVec2(0, 120), true,
+                        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.13f, 0.15f, 0.18f, 1.0f)); // dark gray background
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.17f, 0.20f, 0.24f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.20f, 0.23f, 0.27f, 1.0f));
+
+        // Use a two-column grid for labels and inputs with spacing
+        ImGui::Columns(2, nullptr, false);
+        ImGui::SetColumnWidth(0, 130);
+
+        // Clamp values before showing
+        startFrame = std::clamp(startFrame, 0, std::max(0, defaultEndFrame - 1));
+        endFrame = std::clamp(endFrame, startFrame + 1, std::max(startFrame + 1, defaultEndFrame));
+
+        // Start Frame
+        ImGui::Text("Start Frame");
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(-1);
+        if (ImGui::DragInt("##StartFrame", &startFrame, 1.0f)) {
+            startFrame = std::clamp(startFrame, 0, std::max(0, defaultEndFrame - 1));
+
+            if (endFrame <= startFrame)
+                endFrame = std::min(startFrame + 1, defaultEndFrame);
+        }
         ImGui::PopItemWidth();
+        ImGui::NextColumn();
+
+        // End Frame
+        ImGui::Text("End Frame");
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(-1);
+        if (ImGui::DragInt("##EndFrame", &endFrame, 1.0f)) {
+            //endFrame = std::clamp(endFrame, startFrame + 1, defaultEndFrame);
+            endFrame = std::clamp(endFrame, 0, defaultEndFrame);
+            
+            if (endFrame <= startFrame)
+                startFrame = std::max(endFrame - 1, defaultStartFrame);
+        }
+        ImGui::PopItemWidth();
+
+
+        ImGui::Columns(1);
+
+        ImGui::PopStyleColor(3);
+        ImGui::PopStyleVar();
+
+        ImGui::Spacing();
+
+        // Validation / status line with modern subtle text
+        ImVec4 textColorGood = ImVec4(0.40f, 0.85f, 0.55f, 1.0f);
+        ImVec4 textColorBad = ImVec4(0.95f, 0.40f, 0.40f, 1.0f);
+
+        if (startFrame < 0) {
+            ImGui::TextColored(textColorBad, "Start frame cannot be negative.");
+        } else if (endFrame <= startFrame) {
+            ImGui::TextColored(textColorBad, "End frame must be greater than start frame.");
+        } else {
+            ImGui::TextColored(textColorGood, "Processing frames %d to %d", startFrame, endFrame);
+        }
+
+        ImGui::Spacing();
+
+        // Reset button with flat style and accent color, right-aligned
+        float btnWidth = 110.0f;
+        ImGui::Dummy(ImVec2(0,0));
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - btnWidth);
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.12f, 0.65f, 0.87f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.15f, 0.72f, 0.92f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.10f, 0.58f, 0.78f, 1.0f));
+        if (ImGui::Button("Reset Frames", ImVec2(btnWidth, 30))) {
+            startFrame = defaultStartFrame;
+            endFrame = defaultEndFrame;
+        }
+        ImGui::PopStyleColor(3);
+
+        ImGui::EndChild();
+
         ImGui::EndGroup();
+
+
+
     }
     
     ImGui::EndChild();
@@ -1400,14 +1495,111 @@ void RenderFacialReconstructionTab() {
 
     ImGui::Spacing();
     ImGui::Dummy(ImVec2(0.0f, 1.0f)); // thin divider-like spacing
-    // --- Add Export button here ---
+    // --- Export Section Header ---
     ImGui::Spacing();
-    if (ImGui::Button("Export", fullSize))
+    ImGui::Separator();
+    //ImGui::Dummy(ImVec2(0.0f, 6.0f));
+    ImGui::TextColored(ImVec4(0.9f, 0.7f, 0.2f, 1.0f), "Export Model");
+    //ImGui::TextUnformatted("Export Model");
+    //ImGui::Dummy(ImVec2(0.0f, 6.0f));
+    ImGui::Spacing();
+
+    // --- Choose Export Path Button ---
+    ImVec2 buttonSize = ImVec2(fullSize.x, 0); // Fixed height for consistency
+    float buttonX = (ImGui::GetContentRegionAvail().x - buttonSize.x) * 0.5f;
+    if (buttonX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonX);
+
+    bool canExport = (startFrame >= 0) && (endFrame > startFrame) && model.loaded;
+    // Export Button
+    ImGui::BeginDisabled(!canExport);  // Disable if condition not met
+    if (ImGui::Button("Choose Export Path (.glb)", buttonSize))
     {
-        // Call your export function here, e.g.:
-        // model2.Export("output_path.glb");
-        // Or toggle an export flag to be handled outside this function
+        IGFD::FileDialogConfig config;
+        config.path = GetDesktopPath();
+        config.flags = ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite;
+
+        ImGuiFileDialog::Instance()->OpenDialog(
+            "ChooseExport",
+            "Select Export Location",
+            ".glb",
+            config
+        );
     }
+    ImGui::EndDisabled();  // End disabling block
+
+    // Show export status message
+    ImGui::Spacing();
+    if (!canExport) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));  // Reddish warning color
+        ImGui::TextWrapped("Export unavailable: Make sure the model is loaded and frame range is valid.");
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+    }
+
+    // Show selected export path or placeholder
+    ImGui::PushStyleColor(ImGuiCol_Text, exportFilePath.empty() 
+        ? ImVec4(1.0f, 0.6f, 0.4f, 1.0f)   // Orange-ish placeholder color
+        : ImVec4(0.6f, 0.6f, 0.6f, 1.0f)); // Neutral gray for selected path
+    ImGui::TextWrapped("%s", exportFilePath.empty() ? "< No export path selected >" : exportFilePath.c_str());
+    ImGui::PopStyleColor();
+
+    // --- Display Save Dialog ---
+    if (ImGuiFileDialog::Instance()->Display("ChooseExport", ImGuiWindowFlags_NoCollapse, ImVec2(700, 400)))
+    {
+        if (ImGuiFileDialog::Instance()->IsOk())
+        {
+            exportFilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+            exportStatusMsg = "";
+
+            std::cout << "Selected Export File: " << exportFilePath << std::endl;
+            std::cout << "Reconstruct Model Path: " << reconstructModelPath << std::endl;
+
+            fs::path modelPath = reconstructModelPath;
+            fs::path frameDir = modelPath.parent_path().parent_path() / "frames_model";
+
+            std::cout << "Resolved Frame Directory: " << frameDir << std::endl;
+            std::cout << "Start Frame: " << startFrame << ", End Frame: " << endFrame << std::endl;
+            std::cout << "FPS: " << get_FPS() << std::endl;
+
+            model.ExportModel(frameDir.string(), exportFilePath, get_FPS() ,startFrame, endFrame);
+        }
+        ImGuiFileDialog::Instance()->Close();
+    }
+
+    /*
+    // --- Export Now Button ---
+    if (ImGui::Button("Export Now", ImVec2(140, 0)))
+    {
+        if (!exportFilePath.empty())
+        {
+            bool success = true; // Replace with model2.Export(exportFilePath);
+            if (success)
+                exportStatusMsg = "Export successful:\n" + exportFilePath;
+            else
+                exportStatusMsg = "Export failed!";
+        }
+        else
+        {
+            exportStatusMsg = "Please select an export path first.";
+        }
+    }
+
+    // --- Show Export Status ---
+    if (!exportStatusMsg.empty())
+    {
+        ImGui::SameLine();
+        ImGui::TextWrapped("%s", exportStatusMsg.c_str());
+    }
+
+    // --- Tooltip (Only on Hovering "Export Now") ---
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+    {
+        ImGui::SetTooltip("Click to export the current model as a .glb file.");
+    }*/
+
+    // --- Padding & Divider ---
+    //ImGui::Dummy(ImVec2(0.0f, 10.0f));
+    ImGui::Separator();
     ImGui::Spacing();
 
     if (animationMode == 1)

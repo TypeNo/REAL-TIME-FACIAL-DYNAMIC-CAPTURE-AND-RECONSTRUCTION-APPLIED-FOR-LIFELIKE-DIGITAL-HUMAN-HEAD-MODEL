@@ -5,6 +5,9 @@
 #include <assimp/postprocess.h>
 #include <iostream>
 #include "TextureLoader.hpp"
+#include <pybind11/embed.h> // Everything needed for embedding
+#include <Python.h>
+namespace py = pybind11;
 
 Model::Model() : loaded(false) {}
 
@@ -252,8 +255,10 @@ void Model::ExpressionControl(const float* Expressions){
 }
 
 void Model::loadModel(const std::string& path) {
+    
+    ModelPath = path;
     Assimp::Importer importer;
-        scene = importer.ReadFile(path,
+    const aiScene* scene = importer.ReadFile(path,
         aiProcess_Triangulate |
         //aiProcess_FlipUVs |
         aiProcess_CalcTangentSpace |
@@ -574,22 +579,177 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
     return result;
 }
 
-void Model::ExportModel(const std::string& inputPath, const std::string& outputPath, const std::string& exportFormat) {
-    Assimp::Importer importer;
-    const aiScene* export_scene = scene;
+void Model::ExportModel2(const std::string& outputPath) {
+    if (!loaded) return;
 
-    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        std::cerr << "Assimp import error: " << importer.GetErrorString() << std::endl;
+    
+    Assimp::Importer importer;
+    const aiScene* export_scene = importer.ReadFile(ModelPath,
+        aiProcess_ValidateDataStructure |
+        aiProcess_Triangulate |
+        //aiProcess_FlipUVs |
+        aiProcess_CalcTangentSpace |
+        aiProcess_GenSmoothNormals |
+        //aiProcess_JoinIdenticalVertices |
+        aiProcess_SortByPType
+    );;
+
+    std::string exportFormat = "glb2"; // e.g., "obj", "ply", "stl", "fbx", "glb2"
+
+    // Step 1: Check if the scene is valid
+    if (!export_scene || export_scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !export_scene->mRootNode) {
+        std::cerr << "Assimp scene is incomplete or null: " << importer.GetErrorString() << std::endl;
         return;
     }
 
-    Assimp::Exporter exporter;
-    const aiExportFormatDesc* format = exporter.GetExportFormatDescription(0);
+    /*
+    // Step 2: Print some debug info about the scene
+    std::cout << "Scene debug info:\n";
+    std::cout << "  Mesh count: " << export_scene->mNumMeshes << "\n";
+    std::cout << "  Material count: " << export_scene->mNumMaterials << "\n";
+    std::cout << "  Texture count: " << export_scene->mNumTextures << "\n";
+    std::cout << "  Animation count: " << export_scene->mNumAnimations << "\n";
+    std::cout << "  Has Root Node: " << (export_scene->mRootNode ? "Yes" : "No") << "\n";
 
-    // Export using the given export format (e.g., "obj", "glb2")
-    if (exporter.Export(scene, exportFormat.c_str(), outputPath) != AI_SUCCESS) {
+    */
+
+    std::cout << "Animations: " << export_scene->mNumAnimations << "\n";
+    for (unsigned int a = 0; a < export_scene->mNumAnimations; ++a) {
+        aiAnimation* anim = export_scene->mAnimations[a];
+        std::cout << "Animation " << a << ": " << anim->mName.C_Str()
+                << ", duration: " << anim->mDuration
+                << ", ticks/sec: " << anim->mTicksPerSecond
+                << ", morph mesh channels: " << anim->mNumMorphMeshChannels << "\n";
+
+        for (unsigned int m = 0; m < anim->mNumMorphMeshChannels; ++m) {
+            aiMeshMorphAnim* morphAnim = anim->mMorphMeshChannels[m];
+            std::cout << "  Morph animation for mesh: " << morphAnim->mName.C_Str()
+                    << ", keys: " << morphAnim->mNumKeys << "\n";
+
+            for (unsigned int k = 0; k < morphAnim->mNumKeys; ++k) {
+                const aiMeshMorphKey& key = morphAnim->mKeys[k];
+                std::cout << "    Time: " << key.mTime
+                        << ", Num targets: " << key.mNumValuesAndWeights << "\n";
+            }
+        }
+    }
+
+
+
+    // Loop through meshes to display vertex data
+    for (unsigned int i = 0; i < export_scene->mNumMeshes; ++i) {
+        aiMesh* mesh = export_scene->mMeshes[i];
+        std::cout << "Mesh " << i << ": " << mesh->mNumVertices << " vertices\n";
+
+        for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
+            aiFace& face = mesh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; ++j) {
+                if (face.mIndices[j] >= mesh->mNumVertices) {
+                    std::cerr << "Invalid index found: " << face.mIndices[j]
+                            << " (vertex count: " << mesh->mNumVertices << ")\n";
+                }
+            }
+        }
+
+    for (unsigned int j = 0; j < mesh->mNumAnimMeshes; ++j) {
+        aiAnimMesh* morph = mesh->mAnimMeshes[j];
+        for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
+            aiFace& face = mesh->mFaces[i];
+            for (unsigned int k = 0; k < face.mNumIndices; ++k) {
+                if (face.mIndices[k] >= morph->mNumVertices) {
+                    std::cerr << "Morph target " << j << " has insufficient vertices.\n";
+                    std::cerr << "Index " << face.mIndices[k]
+                            << " exceeds morph vertex count: " << morph->mNumVertices << "\n";
+                }
+            }
+        }
+    }
+
+    /*
+        for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+            aiVector3D pos = mesh->mVertices[v];
+            std::cout << "  Vertex " << v << ": ("
+                    << pos.x << ", " << pos.y << ", " << pos.z << ")";
+            
+            if (mesh->HasNormals()) {
+                aiVector3D normal = mesh->mNormals[v];
+                std::cout << ", Normal: ("
+                        << normal.x << ", " << normal.y << ", " << normal.z << ")";
+            }
+
+            if (mesh->HasTextureCoords(0)) {
+                aiVector3D uv = mesh->mTextureCoords[0][v];
+                std::cout << ", UV: (" << uv.x << ", " << uv.y << ")";
+            }
+
+            std::cout << "\n";
+        }*/
+    }
+
+    // Step 3: Check if the export format is supported
+    Assimp::Exporter exporter;
+    bool formatSupported = false;
+    /*
+    unsigned int numFormats = exporter.GetExportFormatCount();
+    for (unsigned int i = 0; i < numFormats; ++i) {
+        const aiExportFormatDesc* desc = exporter.GetExportFormatDescription(i);
+        if (desc && exportFormat == desc->id) {
+            formatSupported = true;
+            std::cout << "Export format supported: " << desc->description << " (" << desc->fileExtension << ")\n";
+            break;
+        }
+    }
+
+    if (!formatSupported) {
+        std::cerr << "Export format not supported: " << exportFormat << "\n";
+        std::cerr << "Available formats:\n";
+        for (unsigned int i = 0; i < numFormats; ++i) {
+            const aiExportFormatDesc* desc = exporter.GetExportFormatDescription(i);
+            std::cerr << "  " << desc->id << " - " << desc->description << " (*." << desc->fileExtension << ")\n";
+        }
+        return;
+    }
+    */
+   
+    // Step 4: Attempt to export the model
+    if (exporter.Export(export_scene, exportFormat.c_str(), outputPath) != AI_SUCCESS) {
         std::cerr << "Assimp export error: " << exporter.GetErrorString() << std::endl;
     } else {
         std::cout << "Export successful to: " << outputPath << std::endl;
     }
 }
+
+void Model::ExportModel(const std::string& FrameDir,
+                        const std::string& outputPath,
+                        float FPS,
+                        int start_frame,
+                        int end_frame) 
+{
+    if (!loaded) return;
+
+    try {
+        py::gil_scoped_acquire gil;
+        py::module sys = py::module::import("sys");
+        py::module face_export = py::module::import("obj2glb");
+
+        std::cout << "Exporting with:\n"
+          << "  FrameDir: " << FrameDir << "\n"
+          << "  Output: " << outputPath << "\n"
+          << "  FPS: " << FPS << "\n"
+          << "  start_frame: " << start_frame << ", end_frame: " << end_frame << "\n";
+
+        if (py::hasattr(face_export, "export_glb")) {
+            face_export.attr("export_glb")(FrameDir, outputPath, FPS, start_frame, end_frame);
+            std::cout << "✅ Export successful!\n";
+        } else {
+            std::cerr << "❌ Error: 'export_glb' function not found in obj2glb.\n";
+        }
+    }
+    catch (const py::error_already_set& e) {
+        std::cerr << "❌ Python Error:\n" << e.what() << "\n";
+    }
+    catch (const std::exception& e) {
+        std::cerr << "❌ Export Failed:\n" << e.what() << "\n";
+    }
+}
+
