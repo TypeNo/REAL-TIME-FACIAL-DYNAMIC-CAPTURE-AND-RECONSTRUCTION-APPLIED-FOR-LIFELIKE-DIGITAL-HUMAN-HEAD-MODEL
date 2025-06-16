@@ -24,7 +24,7 @@ from skimage.io import imread, imsave
 from skimage.transform import estimate_transform, warp, resize, rescale
 from glob import glob
 import scipy.io
-import Retinex
+#import Retinex
 
 from . import detectors
 

@@ -5,6 +5,7 @@
 #include <assimp/postprocess.h>
 #include <iostream>
 #include "TextureLoader.hpp"
+#define PYBIND11_DETAILED_ERROR_MESSAGES
 #include <pybind11/embed.h> // Everything needed for embedding
 #include <Python.h>
 namespace py = pybind11;
@@ -743,6 +744,55 @@ void Model::ExportModel(const std::string& FrameDir,
             std::cout << "✅ Export successful!\n";
         } else {
             std::cerr << "❌ Error: 'export_glb' function not found in obj2glb.\n";
+        }
+    }
+    catch (const py::error_already_set& e) {
+        std::cerr << "❌ Python Error:\n" << e.what() << "\n";
+    }
+    catch (const std::exception& e) {
+        std::cerr << "❌ Export Failed:\n" << e.what() << "\n";
+    }
+}
+
+void Model::ExportCustomizedModel(const std::string& FrameDir,
+                        const std::string& outputPath,
+                        float FPS,
+                        int frames,
+                        const std::vector<float>& expressions) 
+{
+    if (!loaded) return;
+
+    std::cout << "expressions size: " << expressions.size() << std::endl;
+
+    try {
+        py::gil_scoped_acquire gil;
+        py::module sys = py::module::import("sys");
+        py::module face_export = py::module::import("obj2glb");
+
+        std::cout << "Exporting with:\n"
+          << "  FrameDir: " << FrameDir << "\n"
+          << "  Output: " << outputPath << "\n"
+          << "  FPS: " << FPS << "\n"
+          << "  frames: " << frames << "\n";
+
+        py::int_ pyFrames = py::int_(frames);
+        py::list pyExpressions;
+        for (float val : expressions) {
+            pyExpressions.append(val);
+        }
+
+
+        if (py::hasattr(face_export, "export_animated_glb")) {
+                face_export.attr("export_animated_glb")(
+                py::cast(FrameDir),
+                py::cast(outputPath),
+                py::cast(FPS),
+                pyFrames,
+                pyExpressions
+            );
+            std::cout << "✅ Export successful!\n";
+        } else {
+            std::cerr << "❌ Error: 'export_animated_glb' function not found in obj2glb.\n";
         }
     }
     catch (const py::error_already_set& e) {

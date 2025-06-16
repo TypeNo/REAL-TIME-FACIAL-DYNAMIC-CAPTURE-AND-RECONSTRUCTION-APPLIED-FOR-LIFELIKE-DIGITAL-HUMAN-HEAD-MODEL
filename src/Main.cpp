@@ -91,6 +91,7 @@ std::string reconstructModelPath2;
 static int animationMode = 0; // 0 = Dynamic Capture, 1 = Predefined Expression
 static float expressions[50] = {}; // range [-1, 1]
 
+
 //Default Input Dir
 std::string GetDesktopPath() {
     #ifdef _WIN32
@@ -132,7 +133,7 @@ void InitFramebuffer(int width, int height);
 //IMGUI Texture Rendering------------------------------------------------------------------------
 //Default Texture
 static GLuint defaultTexture = 0;
-//Frames Playback-----
+//Frames Playback for Model1-----
 float playbackFPS = 30.0f;            // Target playback rate
 static size_t currentFrameIndex = 0;
 static double frameDuration = 1.0 / playbackFPS;
@@ -141,6 +142,11 @@ static double lastTime = 0.0;
 static double currentTime = 0.0;
 float alpha;
 static int startFrame = 0, endFrame = 0;
+
+//Frames Playback for Model2-----
+static int customized_fps = 30;
+static int customized_frameCount = 60;
+static bool animationEnabled = true;
 
 //--------------------
 //Input Directory Configuration-----
@@ -181,6 +187,8 @@ void runPythonConstruct(const std::string& selectedFilePath);
 
 //Playback Control
 bool TimelineWidget(const char* label, size_t& currentFrameIndex, size_t totalFrames, bool& autoPlay);
+
+inline void ToggleButton(const char* str_id, bool* v);
 
 
 int main()
@@ -417,7 +425,11 @@ int main()
                 ImGui::Begin("Facial Reconstruction App", nullptr,
                     ImGuiWindowFlags_NoMove |
                     ImGuiWindowFlags_NoCollapse |
-                    ImGuiWindowFlags_NoTitleBar);
+                    ImGuiWindowFlags_NoTitleBar |
+                    ImGuiWindowFlags_NoResize |
+                    ImGuiWindowFlags_NoScrollbar |
+                    ImGuiWindowFlags_NoScrollWithMouse
+                );
 
                 //Application Layout Configuration
                 ImVec2 windowSize = ImGui::GetContentRegionAvail();
@@ -1463,11 +1475,16 @@ void RenderFacialReconstructionTab() {
 
     // --- Second Column: Manager Tabs or tools (30%) ---
     float buttonWidth = ImGui::GetColumnWidth();
-    ImVec2 fullSize = ImVec2(buttonWidth - ImGui::GetStyle().ItemSpacing.x, 32);
+    //ImVec2 fullSize = ImVec2(buttonWidth - ImGui::GetStyle().ItemSpacing.x, 32);
+    float availableWidth = ImGui::GetContentRegionAvail().x;
+    ImVec2 fullSize = ImVec2(availableWidth, 32); // or clamp it slightly smaller
 
-    ImGui::BeginChild("AnimationModeChild", ImVec2(0, 0), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
 
-    ImGui::TextDisabled("Animation Mode");
+    //ImGui::BeginChild("AnimationModeChild", ImVec2(0, 0), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+    ImGui::BeginChild("AnimationModeChild", ImVec2(buttonWidth, 0), true, ImGuiWindowFlags_AlwaysUseWindowPadding);
+
+
+    ImGui::TextDisabled("Reconstruction Mode");
     ImGui::Spacing();
 
     // Live Capture button
@@ -1509,7 +1526,11 @@ void RenderFacialReconstructionTab() {
     float buttonX = (ImGui::GetContentRegionAvail().x - buttonSize.x) * 0.5f;
     if (buttonX > 0) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonX);
 
+    // std::cout << "[DEBUG] startFrame: " << startFrame << ", endFrame: " << endFrame 
+    //       << ", model.loaded: " << model.loaded << std::endl;
     bool canExport = (startFrame >= 0) && (endFrame > startFrame) && model.loaded;
+    //std::cout << "[DEBUG] canExport: " << canExport << std::endl;
+
     // Export Button
     ImGui::BeginDisabled(!canExport);  // Disable if condition not met
     if (ImGui::Button("Choose Export Path (.glb)", buttonSize))
@@ -1556,12 +1577,27 @@ void RenderFacialReconstructionTab() {
 
             fs::path modelPath = reconstructModelPath;
             fs::path frameDir = modelPath.parent_path().parent_path() / "frames_model";
+            fs::path expressionDir = modelPath.parent_path().parent_path() / "expression_models";
 
             std::cout << "Resolved Frame Directory: " << frameDir << std::endl;
             std::cout << "Start Frame: " << startFrame << ", End Frame: " << endFrame << std::endl;
             std::cout << "FPS: " << get_FPS() << std::endl;
 
-            model.ExportModel(frameDir.string(), exportFilePath, get_FPS() ,startFrame, endFrame);
+            
+            if(animationMode == 0){
+                model.ExportModel(frameDir.string(), exportFilePath, get_FPS() ,startFrame, endFrame);
+            }else{
+
+                std::vector<float> exprVec(expressions, expressions + 50);
+                int frames = !animationEnabled ? 1 : customized_frameCount;
+                std::cout << "Calling ExportCustomizedModel with:\n"
+                << "  Dir: " << expressionDir << "\n"
+                << "  Output: " << exportFilePath << "\n"
+                << "  FPS: " << customized_fps << "\n"
+                << "  Frames: " << frames << "\n"
+                << "  Expressions size: " << exprVec.size() << "\n";
+                model2.ExportCustomizedModel(expressionDir.string(), exportFilePath, customized_fps, frames, exprVec);
+            }
         }
         ImGuiFileDialog::Instance()->Close();
     }
@@ -1604,6 +1640,116 @@ void RenderFacialReconstructionTab() {
 
     if (animationMode == 1)
     {
+        // Space and label
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // Actual toggle switch
+        
+        // --- Section Container Styling ---
+        // Determine full width inside current child/window
+        float fullWidth = ImGui::GetContentRegionAvail().x;
+        float sectionHeight = animationEnabled ? 100.0f : 50.0f; // Increase height if fields are shown
+
+        // Base color from current style
+        ImVec4 baseColor = ImGui::GetStyleColorVec4(ImGuiCol_ChildBg);
+
+        // Slightly adjust it to make it stand out
+        ImVec4 sectionColor = ImVec4(
+            baseColor.x * 1.05f,  // Slightly lighter
+            baseColor.y * 1.05f,
+            baseColor.z * 1.05f,
+            baseColor.w
+        );
+
+        // Section background color (light gray)
+        ImVec2 sectionPos = ImGui::GetCursorScreenPos();
+        ImVec2 sectionSize(fullWidth, sectionHeight);
+
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        // ImU32 bg_col = IM_COL32(230, 230, 230, 255);        // Soft gray
+        // ImU32 border_col = IM_COL32(180, 180, 180, 120);    // Subtle border
+        ImU32 bg_col = ImGui::GetColorU32(sectionColor);
+        ImU32 border_col = IM_COL32(180, 180, 180, 100); // Subtle neutral border
+        float border_rounding = 6.0f;
+
+        // Draw gray background with border
+        draw_list->AddRectFilled(sectionPos, ImVec2(sectionPos.x + sectionSize.x, sectionPos.y + sectionSize.y), bg_col, border_rounding);
+        draw_list->AddRect(sectionPos, ImVec2(sectionPos.x + sectionSize.x, sectionPos.y + sectionSize.y), border_col, border_rounding, 0, 1.0f);
+
+        // Add inner padding
+        ImGui::SetCursorScreenPos(ImVec2(sectionPos.x + 12, sectionPos.y + 12));
+        ImGui::BeginGroup();
+
+        // Text on the left
+        // Soft neutral text color that fits most themes
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.90f, 0.90f, 0.90f, 1.0f)); // Light grayish-white
+        ImGui::Text("Enable Animation");
+        ImGui::PopStyleColor();
+
+        // Toggle aligned to the right of the container
+        ImGui::SameLine(fullWidth - 60.0f);  // Adjust offset to position toggle
+        ToggleButton("##animToggle", &animationEnabled); // Make sure this function is defined as shared before
+
+        if (animationEnabled) {
+            // Available width and spacing
+            float fullWidth = ImGui::GetContentRegionAvail().x;
+            float spacing = ImGui::GetStyle().ItemSpacing.x;
+
+            // Label sizes
+            const char* labelFPS = "FPS";
+            const char* labelFrames = "Frames";
+            float labelFPSWidth = ImGui::CalcTextSize(labelFPS).x + ImGui::GetStyle().ItemInnerSpacing.x;
+            float labelFramesWidth = ImGui::CalcTextSize(labelFrames).x + ImGui::GetStyle().ItemInnerSpacing.x;
+
+            // Half width minus label sizes and spacing
+            float halfWidth = (fullWidth - spacing) * 0.5f;
+            float inputFPSWidth = halfWidth - labelFPSWidth;
+            //float inputFPSWidth = halfWidth;
+            float inputFramesWidth = halfWidth - labelFramesWidth;
+            //float inputFramesWidth = halfWidth;
+
+
+            // Layout tweaks
+            ImGui::Dummy(ImVec2(0.0f, 4.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 3));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f)); // clean, subtle
+
+            // FPS field
+            ImGui::BeginGroup();
+            ImGui::TextUnformatted(labelFPS);
+            ImGui::PushItemWidth(inputFPSWidth);
+            ImGui::DragInt("##fps", &customized_fps, 1, 1, 120, "%d");
+            ImGui::PopItemWidth();
+            ImGui::EndGroup();
+
+            ImGui::SameLine();
+
+            // Frames field
+            ImGui::BeginGroup();
+            ImGui::TextUnformatted(labelFrames);
+            ImGui::PushItemWidth(inputFramesWidth);
+            ImGui::DragInt("##frames", &customized_frameCount, 1, 2, 10000, "%d");
+            ImGui::PopItemWidth();
+            ImGui::EndGroup();
+
+            ImGui::PopStyleColor();
+            ImGui::PopStyleVar(2);
+        }
+
+        ImGui::EndGroup();
+
+        // Optional spacing below section
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+
+        // Optional spacing below section
+        ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+        // Optionally show state as text
+
         bool expressionChanged = false;     // Track changes
     
         ImGui::TextDisabled("Expression Sliders");
@@ -1611,7 +1757,7 @@ void RenderFacialReconstructionTab() {
 
         // Reset Button
         if (ImGui::Button("Reset All")) {
-            for (int i = 0; i < 100; ++i)
+            for (int i = 0; i < 50; ++i)
                 expressions[i] = 0.0f;
             expressionChanged = true;
         }
@@ -1746,3 +1892,73 @@ void InitFramebuffer(int width, int height) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+inline void ToggleButton(const char* str_id, bool* v)
+{
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    const float height = ImGui::GetFrameHeight();
+    const float width = height * 2.4f;
+    const float radius = height * 0.5f;
+
+    ImGui::InvisibleButton(str_id, ImVec2(width, height));
+    bool hovered = ImGui::IsItemHovered();
+    bool clicked = ImGui::IsItemClicked();
+    if (clicked) *v = !*v;
+
+    // Colors
+    ImU32 col_on = IM_COL32(40, 200, 120, 255);
+    ImU32 col_off = IM_COL32(220, 80, 80, 255);
+    ImU32 col_inactive = IM_COL32(200, 200, 200, 255);
+    ImU32 knob_col = IM_COL32(255, 255, 255, 255);
+    ImU32 divider_col = IM_COL32(160, 160, 160, 120);
+    ImU32 shadow_col = IM_COL32(0, 0, 0, 25);
+
+    float half = width * 0.5f;
+
+    // Sides with color fade on hover
+    draw_list->AddRectFilled(
+        pos,
+        ImVec2(pos.x + half, pos.y + height),
+        *v ? (hovered ? ImGui::GetColorU32(ImVec4(0.2f, 0.9f, 0.5f, 1.0f)) : col_on) : col_inactive,
+        radius,
+        ImDrawFlags_RoundCornersLeft
+    );
+
+    draw_list->AddRectFilled(
+        ImVec2(pos.x + half, pos.y),
+        ImVec2(pos.x + width, pos.y + height),
+        *v ? col_inactive : (hovered ? ImGui::GetColorU32(ImVec4(0.9f, 0.3f, 0.3f, 1.0f)) : col_off),
+        radius,
+        ImDrawFlags_RoundCornersRight
+    );
+
+    // Divider line
+    draw_list->AddLine(
+        ImVec2(pos.x + half, pos.y + 3),
+        ImVec2(pos.x + half, pos.y + height - 3),
+        divider_col,
+        1.0f
+    );
+
+    // Knob position
+    float knob_size = height - 6.0f;
+    float knob_x = *v ? (pos.x + width - knob_size - 3.0f) : (pos.x + 3.0f);
+
+    // Optional subtle shadow behind knob
+    draw_list->AddCircleFilled(
+        ImVec2(knob_x + knob_size * 0.5f, pos.y + height * 0.5f + 1),
+        knob_size * 0.52f,
+        shadow_col
+    );
+
+    // Knob (circular)
+    draw_list->AddCircleFilled(
+        ImVec2(knob_x + knob_size * 0.5f, pos.y + height * 0.5f),
+        knob_size * 0.5f,
+        knob_col
+    );
+}
+
+

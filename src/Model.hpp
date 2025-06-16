@@ -52,7 +52,12 @@ public:
     void UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames);
     void ExpressionControl(const float* Expressions);
     void ExportModel(const std::string& FrameDir ,const std::string& outputPath, float FPS, int start_frame = 0, int end_frame = 0);
-    void ExportModel2(const std::string& outputPath);  
+    void ExportModel2(const std::string& outputPath);
+    void Model::ExportCustomizedModel(const std::string& FrameDir,
+                        const std::string& outputPath,
+                        float FPS,
+                        int frames,
+                        const std::vector<float>& expressions);
     bool loaded;
 
 private:
