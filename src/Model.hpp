@@ -50,6 +50,9 @@ public:
         return 0; // Invalid index or no texture
     }
     void UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames);
+    void UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames, 
+                                   const std::vector<float>& targetWeights,
+                                   int totalFrames, float fps);
     void ExpressionControl(const float* Expressions);
     void ExportModel(const std::string& FrameDir ,const std::string& outputPath, float FPS, int start_frame = 0, int end_frame = 0);
     void ExportModel2(const std::string& outputPath);

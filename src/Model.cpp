@@ -239,6 +239,57 @@ void Model::UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, meshes[0].weightsSSBO);
 }
 
+void Model::UpdateAnimationWithFrame(int frameIndex, float alphaBetweenFrames, 
+                                   const std::vector<float>& targetWeights,
+                                   int totalFrames, float fps) {
+    if (!loaded) return;
+    if (morphWeights.empty()) return;
+
+    size_t morphTargetsCount = morphWeights.size();
+    
+    // Validate input
+    if (targetWeights.size() != morphTargetsCount) {
+        std::cerr << "Error: targetWeights size doesn't match morph target count" << std::endl;
+        return;
+    }
+
+    if (totalFrames <= 0) {
+        std::cerr << "Error: totalFrames must be positive" << std::endl;
+        return;
+    }
+
+    if (totalFrames == 1) {
+        // Static case - directly apply target weights
+        for (size_t j = 0; j < morphTargetsCount; ++j) {
+            morphWeights[j] = targetWeights[j];
+        }
+    } else {
+        // Animated case - interpolate from neutral to target weights
+        float normalizedTime = static_cast<float>(frameIndex) / (totalFrames - 1);
+        if (frameIndex < totalFrames - 1) {
+            normalizedTime += alphaBetweenFrames / (totalFrames - 1);
+        }
+        normalizedTime = std::clamp(normalizedTime, 0.0f, 1.0f);
+        // std::cout << "Frame: " << frameIndex 
+        //   << ", Alpha: " << alphaBetweenFrames 
+        //   << ", NormTime: " << normalizedTime << std::endl;
+
+        for (size_t j = 0; j < morphTargetsCount; ++j) {
+            // Linear interpolation from 0 to target weight
+            morphWeights[j] = normalizedTime * targetWeights[j];
+        }
+    }
+
+    // Upload morphWeights to GPU
+    for (auto& mesh : meshes) {
+        if (mesh.weightsSSBO != 0) {
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.weightsSSBO);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, morphWeights.size() * sizeof(float), morphWeights.data());
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, mesh.weightsSSBO);
+        }
+    }
+}
+
 void Model::ExpressionControl(const float* Expressions){
     if (!loaded) return;
 

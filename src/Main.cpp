@@ -41,12 +41,19 @@ namespace py = pybind11;
 #include "Camera.hpp"
 #include "TextureLoader.hpp"
 
-
 namespace fs = std::filesystem;
 
 typedef void (__cdecl *update_progress_t)(int, int);
 typedef int (__cdecl *get_progress_t)();
 typedef int (*GetProgressFunc)();
+
+enum class ActiveTab {
+    None,
+    FacialCapture,
+    FacialReconstruction
+};
+
+static ActiveTab activeTab = ActiveTab::None;
 
 // Global or class-level flag and thread
 std::thread pythonThread;// Face_reconstruction thread
@@ -147,6 +154,8 @@ static int startFrame = 0, endFrame = 0;
 static int customized_fps = 30;
 static int customized_frameCount = 60;
 static bool animationEnabled = true;
+static size_t Customized_currentFrameIndex = 0;
+
 
 //--------------------
 //Input Directory Configuration-----
@@ -186,7 +195,7 @@ void DeleteAllTextures(std::map<std::string, GLuint>& Textures, std::vector<GLui
 void runPythonConstruct(const std::string& selectedFilePath);
 
 //Playback Control
-bool TimelineWidget(const char* label, size_t& currentFrameIndex, size_t totalFrames, bool& autoPlay);
+bool TimelineWidget(const char* label, size_t& currentFrameIndex, size_t totalFrames, bool& autoPlay, float& alpha, double& frameDuration);
 
 inline void ToggleButton(const char* str_id, bool* v);
 
@@ -444,6 +453,7 @@ int main()
                         if (ImGui::BeginTabItem("Facial Capture"))
                         {
                             //RenderFacialTrackingTab();
+                            activeTab = ActiveTab::FacialCapture;
                             RenderFacialTrackingUI();
                             ImGui::EndTabItem();
                         }
@@ -451,6 +461,7 @@ int main()
                         if (ImGui::BeginTabItem("Facial Reconstruction"))
                         {
                             //ImGui::Text("Facial Capture content goes here...");
+                            activeTab = ActiveTab::FacialReconstruction;
                             RenderFacialReconstructionTab();
                             ImGui::EndTabItem();
                         }
@@ -463,7 +474,21 @@ int main()
                 // Bottom Region: Timeline
                 ImGui::BeginChild("TimelineRegion", ImVec2(0, timelineHeight), true);
                 {
-                    TimelineWidget("MyTimeline", currentFrameIndex, sortedTrackingKeys.size(), autoPlay);
+                    if (customized_fps <= 0) {
+                        std::cerr << "[Warning] customized_fps was " << customized_fps << ", clamping to 1." << std::endl;
+                        customized_fps = 1;
+                    }
+                    double customized_frameDuration = 1.0 / static_cast<double>(customized_fps);
+                    //std::cout << "customized_fps: " << customized_fps << ", customized_frameDuration: " << customized_frameDuration << std::endl;
+
+                    size_t dummy = 0;
+                    if(activeTab == ActiveTab::FacialCapture || animationMode == 0 || !model.loaded){
+                        TimelineWidget("MyTimeline", currentFrameIndex, sortedTrackingKeys.size(), autoPlay, alpha, frameDuration);
+                    }else if(animationEnabled){
+                        TimelineWidget("MyTimeline2", Customized_currentFrameIndex, customized_frameCount, autoPlay, alpha, customized_frameDuration);
+                    }else{
+                        TimelineWidget("MyTimeline2", dummy, 1, autoPlay, alpha, customized_frameDuration);
+                    }
                 }
                 ImGui::EndChild();
 
@@ -1286,7 +1311,7 @@ void SetAppWorkingDirectory()
     }
 }
 
-bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bool& autoPlay) {
+bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bool& autoPlay, float& alpha, double& frameDuration) {
 
 
     // --- Constants ---
@@ -1311,15 +1336,31 @@ bool TimelineWidget(const char* id, size_t& currentFrame, size_t totalFrames, bo
     double delta = currentTime - lastTime;
     
     if (autoPlay && totalFrames > 0) {
+        if (frameDuration <= 0.0) {
+            std::cerr << "[Warning] frameDuration is zero or negative: " << frameDuration << ", clamping to 1.0" << std::endl;
+            frameDuration = 1.0;
+        }
+
         if (delta >= frameDuration) {
             currentFrame = (currentFrame + 1) % totalFrames;
             lastTime = currentTime;
-            delta = 0.0; // reset delta so alpha doesn't overshoot
+            delta = 0.0;
         }
-    
+
         alpha = static_cast<float>(delta / frameDuration);
+        if (std::isnan(alpha)) {
+            std::cerr << "[Error] Alpha is NaN! delta: " << delta << ", frameDuration: " << frameDuration << std::endl;
+            alpha = 0.0f;
+        }
+
         alpha = std::clamp(alpha, 0.0f, 1.0f);
+
+        // std::cout << "[DEBUG] Frame: " << currentFrame 
+        //         << ", Delta: " << delta 
+        //         << ", FrameDuration: " << frameDuration 
+        //         << ", Alpha: " << alpha << std::endl;
     }
+
 
     // --- Layout ---
     ImDrawList* dl = ImGui::GetWindowDrawList();
@@ -1722,6 +1763,7 @@ void RenderFacialReconstructionTab() {
             ImGui::TextUnformatted(labelFPS);
             ImGui::PushItemWidth(inputFPSWidth);
             ImGui::DragInt("##fps", &customized_fps, 1, 1, 120, "%d");
+            customized_fps = std::max(customized_fps, 1); // Prevent 0 or negative FPS
             ImGui::PopItemWidth();
             ImGui::EndGroup();
 
@@ -1732,6 +1774,7 @@ void RenderFacialReconstructionTab() {
             ImGui::TextUnformatted(labelFrames);
             ImGui::PushItemWidth(inputFramesWidth);
             ImGui::DragInt("##frames", &customized_frameCount, 1, 2, 10000, "%d");
+            customized_frameCount = std::max(customized_frameCount, 2);
             ImGui::PopItemWidth();
             ImGui::EndGroup();
 
@@ -1845,6 +1888,12 @@ void DrawModelView() {
         model.Draw();
     }
     else{
+        std::vector<float> targetWeights(expressions, expressions + 50);
+        if(animationEnabled){
+            model2.UpdateAnimationWithFrame(Customized_currentFrameIndex, alpha, targetWeights, customized_frameCount, customized_fps);
+        }else{
+            model2.UpdateAnimationWithFrame(Customized_currentFrameIndex, alpha, targetWeights, 1, customized_fps);
+        }
         model2.Draw();
     }
 
