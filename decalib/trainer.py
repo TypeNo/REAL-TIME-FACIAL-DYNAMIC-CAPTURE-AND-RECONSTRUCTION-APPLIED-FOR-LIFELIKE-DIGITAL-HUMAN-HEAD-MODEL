@@ -39,9 +39,11 @@ from .utils.config import cfg
 torch.backends.cudnn.benchmark = True
 from .utils import lossfunc
 from .datasets import build_datasets
+from torch.cuda import amp
 
 class Trainer(object):
     def __init__(self, model, config=None, device='cuda:0'):
+        self.scaler = amp.GradScaler()
         if config is None:
             self.cfg = cfg
         else:
@@ -111,13 +113,20 @@ class Trainer(object):
         self.deca.train()
         if self.train_detail:
             self.deca.E_flame.eval()
-        # [B, K, 3, size, size] ==> [BxK, 3, size, size]
-        images = batch['image'].to(self.device); images = images.view(-1, images.shape[-3], images.shape[-2], images.shape[-1]) 
-        lmk = batch['landmark'].to(self.device); lmk = lmk.view(-1, lmk.shape[-2], lmk.shape[-1])
-        masks = batch['mask'].to(self.device); masks = masks.view(-1, images.shape[-2], images.shape[-1]) 
+        # Mixed precision context
+        with amp.autocast():
+            # [B, K, 3, size, size] ==> [BxK, 3, size, size]
+            images = batch['image'].to(self.device); images = images.view(-1, images.shape[-3], images.shape[-2], images.shape[-1]) 
+            lmk = batch['landmark'].to(self.device); lmk = lmk.view(-1, lmk.shape[-2], lmk.shape[-1])
+            masks = batch['mask'].to(self.device); masks = masks.view(-1, images.shape[-2], images.shape[-1]) 
 
-        #-- encoder
-        codedict = self.deca.encode(images, use_detail=self.train_detail)
+            #-- encoder
+            codedict = self.deca.encode(images, use_detail=self.train_detail)
+
+            # Ensure FLAME inputs are float32
+            for key in ['shape', 'exp', 'pose', 'tex', 'light', 'detail', 'cam']:
+                if key in codedict and codedict[key] is not None:
+                    codedict[key] = codedict[key].to(torch.float32)
         
         ### shape constraints for coarse model
         ### detail consistency for detail model
@@ -319,10 +328,14 @@ class Trainer(object):
         # run now validation images
         from .datasets.now import NoWDataset
         dataset = NoWDataset(scale=(self.cfg.dataset.scale_min + self.cfg.dataset.scale_max)/2)
+        # dataloader = DataLoader(dataset, batch_size=8, shuffle=False,
+        #                     num_workers=8,
+        #                     pin_memory=True,
+        #                     drop_last=False)
         dataloader = DataLoader(dataset, batch_size=8, shuffle=False,
-                            num_workers=8,
-                            pin_memory=True,
-                            drop_last=False)
+                    num_workers=8,
+                    pin_memory=True,
+                    drop_last=False)
         faces = self.deca.flame.faces_tensor.cpu().numpy()
         for i, batch in enumerate(tqdm(dataloader, desc='now evaluation ')):
             images = batch['image'].to(self.device)
@@ -359,83 +372,148 @@ class Trainer(object):
         self.deca.train()
 
     def prepare_data(self):
-        self.train_dataset = build_datasets.build_train(self.cfg.dataset)
-        self.val_dataset = build_datasets.build_val(self.cfg.dataset)
-        logger.info('---- training data numbers: ', len(self.train_dataset))
+        logger.info("\n" + "="*80)
+        logger.info("PREPARING DATA LOADERS")
+        logger.info("="*80)
+        try:
+            # Build training dataset
+            logger.info("[DEBUG] Building training dataset...")
+            self.train_dataset = build_datasets.build_train(self.cfg.dataset)
+            logger.info(f"[DEBUG] Training dataset built. Type: {type(self.train_dataset)}")
+            # Build validation dataset
+            logger.info("[DEBUG] Building validation dataset...")
+            self.val_dataset = build_datasets.build_val(self.cfg.dataset)
+            logger.info(f"[DEBUG] Validation dataset built. Type: {type(self.val_dataset)}")
+            # Log dataset sizes
+            logger.info('---- training data numbers: ', len(self.train_dataset))
+            logger.info(f"[INFO] Validation samples: {len(self.val_dataset)}")
 
-        self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
-                            num_workers=self.cfg.dataset.num_workers,
-                            pin_memory=True,
-                            drop_last=True)
-        self.train_iter = iter(self.train_dataloader)
-        self.val_dataloader = DataLoader(self.val_dataset, batch_size=8, shuffle=True,
-                            num_workers=8,
-                            pin_memory=True,
-                            drop_last=False)
-        self.val_iter = iter(self.val_dataloader)
+            self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,
+                                num_workers=self.cfg.dataset.num_workers,
+                                pin_memory=True,
+                                drop_last=True)
+            self.train_iter = iter(self.train_dataloader)
+            self.val_dataloader = DataLoader(self.val_dataset, batch_size=8, shuffle=True,
+                                num_workers=8,
+                                pin_memory=True,
+                                drop_last=False)
+            self.val_iter = iter(self.val_dataloader)
+        except Exception as e:
+            logger.error("\n[ERROR] Data preparation failed!")
+            logger.error(f"Error Type: {type(e).__name__}")
+            logger.error(f"Error Message: {str(e)}")
+            
+            # Log configuration details for debugging
+            logger.error("\n[DEBUG] Configuration Details:")
+            logger.error(f"Dataset Config: {self.cfg.dataset}")
+            logger.error(f"Batch Size: {self.batch_size}")
+            
+            # Check for common issues
+            if 'build_train' not in dir(build_datasets):
+                logger.error("[DEBUG] 'build_train' not found in build_datasets module")
+            if 'build_val' not in dir(build_datasets):
+                logger.error("[DEBUG] 'build_val' not found in build_datasets module")
+            
+            # Re-raise exception to halt execution
+            raise RuntimeError("Data preparation failed") from e
 
     def fit(self):
-        self.prepare_data()
+        logger.info("\n" + "="*80)
+        logger.info("STARTING TRAINING PROCESS")
+        logger.info("="*80)
+        logger.info(f"Global Step: {self.global_step}")
+        logger.info(f"Batch Size: {self.batch_size}")
+        logger.info(f"Max Epochs: {self.cfg.train.max_epochs}")
+        logger.info("\n[DEBUG] Preparing data...")
+        try:
+            # Prepare data
+            self.prepare_data()
+            logger.info(f"[DEBUG] Dataset size: {len(self.train_dataset)} samples")
+            iters_every_epoch = int(len(self.train_dataset)/self.batch_size)
+            start_epoch = self.global_step//iters_every_epoch
+            for epoch in range(start_epoch, self.cfg.train.max_epochs):
+                logger.info(f"\n{'='*50}")
+                logger.info(f"STARTING EPOCH {epoch+1}/{self.cfg.train.max_epochs}")
+                logger.info(f"{'='*50}")
+                # for step, batch in enumerate(tqdm(self.train_dataloader, desc=f"Epoch: {epoch}/{self.cfg.train.max_epochs}")):
+                for step in tqdm(range(iters_every_epoch), desc=f"Epoch[{epoch+1}/{self.cfg.train.max_epochs}]"):
+                    if epoch*iters_every_epoch + step < self.global_step:
+                        continue
+                    try:
+                        batch = next(self.train_iter)
+                    except:
+                        self.train_iter = iter(self.train_dataloader)
+                        batch = next(self.train_iter)
+                    losses, opdict = self.training_step(batch, step)
+                    if self.global_step % self.cfg.train.log_steps == 0:
+                        loss_info = f"ExpName: {self.cfg.exp_name} \nEpoch: {epoch}, Iter: {step}/{iters_every_epoch}, Time: {datetime.now().strftime('%Y-%m-%d-%H:%M:%S')} \n"
+                        for k, v in losses.items():
+                            loss_info = loss_info + f'{k}: {v:.4f}, '
+                            if self.cfg.train.write_summary:
+                                self.writer.add_scalar('train_loss/'+k, v, global_step=self.global_step)                    
+                        logger.info(loss_info)
 
-        iters_every_epoch = int(len(self.train_dataset)/self.batch_size)
-        start_epoch = self.global_step//iters_every_epoch
-        for epoch in range(start_epoch, self.cfg.train.max_epochs):
-            # for step, batch in enumerate(tqdm(self.train_dataloader, desc=f"Epoch: {epoch}/{self.cfg.train.max_epochs}")):
-            for step in tqdm(range(iters_every_epoch), desc=f"Epoch[{epoch+1}/{self.cfg.train.max_epochs}]"):
-                if epoch*iters_every_epoch + step < self.global_step:
-                    continue
-                try:
-                    batch = next(self.train_iter)
-                except:
-                    self.train_iter = iter(self.train_dataloader)
-                    batch = next(self.train_iter)
-                losses, opdict = self.training_step(batch, step)
-                if self.global_step % self.cfg.train.log_steps == 0:
-                    loss_info = f"ExpName: {self.cfg.exp_name} \nEpoch: {epoch}, Iter: {step}/{iters_every_epoch}, Time: {datetime.now().strftime('%Y-%m-%d-%H:%M:%S')} \n"
-                    for k, v in losses.items():
-                        loss_info = loss_info + f'{k}: {v:.4f}, '
-                        if self.cfg.train.write_summary:
-                            self.writer.add_scalar('train_loss/'+k, v, global_step=self.global_step)                    
-                    logger.info(loss_info)
+                    if self.global_step % self.cfg.train.vis_steps == 0:
+                        visind = list(range(8))
+                        shape_images = self.deca.render.render_shape(opdict['verts'][visind], opdict['trans_verts'][visind])
+                        visdict = {
+                            'inputs': opdict['images'][visind], 
+                            'landmarks2d_gt': util.tensor_vis_landmarks(opdict['images'][visind], opdict['lmk'][visind], isScale=True),
+                            'landmarks2d': util.tensor_vis_landmarks(opdict['images'][visind], opdict['landmarks2d'][visind], isScale=True),
+                            'shape_images': shape_images,
+                        }
+                        if 'predicted_images' in opdict.keys():
+                            visdict['predicted_images'] = opdict['predicted_images'][visind]
+                        if 'predicted_detail_images' in opdict.keys():
+                            visdict['predicted_detail_images'] = opdict['predicted_detail_images'][visind]
 
-                if self.global_step % self.cfg.train.vis_steps == 0:
-                    visind = list(range(8))
-                    shape_images = self.deca.render.render_shape(opdict['verts'][visind], opdict['trans_verts'][visind])
-                    visdict = {
-                        'inputs': opdict['images'][visind], 
-                        'landmarks2d_gt': util.tensor_vis_landmarks(opdict['images'][visind], opdict['lmk'][visind], isScale=True),
-                        'landmarks2d': util.tensor_vis_landmarks(opdict['images'][visind], opdict['landmarks2d'][visind], isScale=True),
-                        'shape_images': shape_images,
-                    }
-                    if 'predicted_images' in opdict.keys():
-                        visdict['predicted_images'] = opdict['predicted_images'][visind]
-                    if 'predicted_detail_images' in opdict.keys():
-                        visdict['predicted_detail_images'] = opdict['predicted_detail_images'][visind]
+                        savepath = os.path.join(self.cfg.output_dir, self.cfg.train.vis_dir, f'{self.global_step:06}.jpg')
+                        grid_image = util.visualize_grid(visdict, savepath, return_gird=True)
+                        # import ipdb; ipdb.set_trace()                    
+                        self.writer.add_image('train_images', (grid_image/255.).astype(np.float32).transpose(2,0,1), self.global_step)
 
-                    savepath = os.path.join(self.cfg.output_dir, self.cfg.train.vis_dir, f'{self.global_step:06}.jpg')
-                    grid_image = util.visualize_grid(visdict, savepath, return_gird=True)
-                    # import ipdb; ipdb.set_trace()                    
-                    self.writer.add_image('train_images', (grid_image/255.).astype(np.float32).transpose(2,0,1), self.global_step)
+                    if self.global_step>0 and self.global_step % self.cfg.train.checkpoint_steps == 0:
+                        model_dict = self.deca.model_dict()
+                        model_dict['opt'] = self.opt.state_dict()
+                        model_dict['global_step'] = self.global_step
+                        model_dict['batch_size'] = self.batch_size
+                        torch.save(model_dict, os.path.join(self.cfg.output_dir, 'model' + '.tar'))
+                        logger.info(f"Saved checkpoint to {os.path.join(self.cfg.output_dir, 'model' + '.tar')}")   
+                        # 
+                        if self.global_step % self.cfg.train.checkpoint_steps*10 == 0:
+                            os.makedirs(os.path.join(self.cfg.output_dir, 'models'), exist_ok=True)
+                            torch.save(model_dict, os.path.join(self.cfg.output_dir, 'models', f'{self.global_step:08}.tar'))   
+                            logger.info(f"Saved full checkpoint to {os.path.join(self.cfg.output_dir, 'models', f'{self.global_step:08}.tar')}")
 
-                if self.global_step>0 and self.global_step % self.cfg.train.checkpoint_steps == 0:
-                    model_dict = self.deca.model_dict()
-                    model_dict['opt'] = self.opt.state_dict()
-                    model_dict['global_step'] = self.global_step
-                    model_dict['batch_size'] = self.batch_size
-                    torch.save(model_dict, os.path.join(self.cfg.output_dir, 'model' + '.tar'))   
-                    # 
-                    if self.global_step % self.cfg.train.checkpoint_steps*10 == 0:
-                        os.makedirs(os.path.join(self.cfg.output_dir, 'models'), exist_ok=True)
-                        torch.save(model_dict, os.path.join(self.cfg.output_dir, 'models', f'{self.global_step:08}.tar'))   
+                    if self.global_step % self.cfg.train.val_steps == 0:
+                        logger.info(f"Running validation at step {self.global_step}...")
+                        self.validation_step()
+                    
+                    if self.global_step % self.cfg.train.eval_steps == 0:
+                        logger.info(f"Running evaluation at step {self.global_step}...")
+                        self.evaluate()
 
-                if self.global_step % self.cfg.train.val_steps == 0:
-                    self.validation_step()
-                
-                if self.global_step % self.cfg.train.eval_steps == 0:
-                    self.evaluate()
-
-                all_loss = losses['all_loss']
-                self.opt.zero_grad(); all_loss.backward(); self.opt.step()
-                self.global_step += 1
-                if self.global_step > self.cfg.train.max_steps:
-                    break
+                    all_loss = losses['all_loss']
+                    # self.opt.zero_grad(); all_loss.backward(); self.opt.step()
+                    # With AMP version:
+                    self.opt.zero_grad()
+                    self.scaler.scale(all_loss).backward()
+                    self.scaler.step(self.opt)
+                    self.scaler.update()
+                    self.global_step += 1
+                    # Clear memory
+                    if self.global_step % 10 == 0:
+                        torch.cuda.empty_cache()
+                    if self.global_step > self.cfg.train.max_steps:
+                        logger.info(f"Reached max steps ({self.cfg.train.max_steps}). Stopping training.")
+                        break
+        except Exception as e:
+            logger.error("\n" + "!"*80)
+            logger.error("TRAINING PROCESS FAILED")
+            logger.error("!"*80)
+            logger.error(f"Error Type: {type(e).__name__}")
+            logger.error(f"Error Message: {str(e)}")
+            logger.error("Traceback:")
+            import traceback
+            logger.error(traceback.format_exc())
+            raise

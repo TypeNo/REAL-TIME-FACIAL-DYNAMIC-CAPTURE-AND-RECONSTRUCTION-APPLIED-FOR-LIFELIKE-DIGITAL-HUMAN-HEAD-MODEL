@@ -63,6 +63,7 @@ def get_progress():
     return progress_status
 
 def main(args):
+    start_all = time.time()
     print("face_reconstruct main() called with args:", args)
     print("sys.argv:", sys.argv)
     savefolder = args.savefolder
@@ -78,11 +79,13 @@ def main(args):
         print("Input is not a video, or FPS could not be determined.")
 
     # run DECA
+    start_deca = time.time()
     deca_cfg.model.use_tex = args.useTex
     deca_cfg.rasterizer_type = args.rasterizer_type
     deca_cfg.model.extract_tex = args.extractTex
     deca = DECA(config = deca_cfg, device=device)
-    
+
+    start_loop = time.time()
     for i in tqdm(range(len(testdata))):
         set_progress(len(testdata), i)
         try:
@@ -98,21 +101,27 @@ def main(args):
         inputname = testdata[i]['imageinputname']
         name = testdata[i]['imagename']
         images = testdata[i]['image'].to(device)[None,...]   
+        start_infer = time.time()
         with torch.no_grad():
             codedict = deca.encode(images)
             if(i == 0):
                 id_codedict = codedict
             opdict, visdict = deca.decode(codedict) #tensor
+            print(f"[Time] DECA encode+decode: {time.time() - start_infer:.2f} seconds")
             if args.render_orig:
+                start_orig_render = time.time()
                 tform = testdata[i]['tform'][None, ...]
                 tform = torch.inverse(tform).transpose(1,2).to(device)
                 original_image = testdata[i]['original_image'][None, ...].to(device)
                 _, orig_visdict = deca.decode(codedict, render_orig=True, original_image=original_image, tform=tform)    
                 orig_visdict['inputs'] = original_image 
+                print(f"[Time] Render original image: {time.time() - start_orig_render:.2f} seconds")            
 
             #if args.saveDepth or args.saveKpt or args.saveObj or args.saveMat or args.saveImages:
                 #os.makedirs(os.path.join(savefolder, name), exist_ok=True)
             # -- save results
+            # Save results
+            start_save = time.time()
             if args.saveDepth:
                 depth_image = deca.render.render_depth(opdict['trans_verts']).repeat(1, 3, 1, 1)
                 visdict['depth_images'] = depth_image
@@ -172,22 +181,30 @@ def main(args):
                         orig_image = util.tensor2image(orig_visdict[vis_name][0])
                         cv2.imwrite(os.path.join(orig_folder, f'{name}_{vis_name}.jpg'), orig_image)
 
+            print(f"[Time] Save Outputs: {time.time() - start_save:.2f} seconds")
+        
         set_progress(len(testdata), i+1)
         print(f"Python Progress: {progress_status['done']} / {progress_status['total']}")
         #progress.update(i+1, len(testdata)) 
         mybridge.update_progress(i+1, len(testdata))
+        print(f"[Time] Total processing loop: {time.time() - start_loop:.2f} seconds")
         #progress_lib.update_progress(i+1, len(testdata))
         #dll.update_progress(i+1, len(testdata))
 
     print(f'-- please check the results in {savefolder}')
 
+    # Export to GLB
+    start_glb = time.time()
     frame_dir = os.path.join(savefolder, inputname, 'frames_model')
     output_glb = os.path.join(savefolder, inputname, 'animation', 'dynamic_animation.glb')
     
     obj2glb.main(model_dir, frame_dir, output_glb, testdata.video_fps or 30.0)
+    print(f"[Time] GLB export: {time.time() - start_glb:.2f} seconds")
     
     mybridge.update_model_path(output_glb)
 
+    # Face transfer
+    start_transfer = time.time()
     new_args = argparse.Namespace(
         image_path=args.inputpath,
         savefolder=os.path.join(savefolder, inputname),
@@ -199,7 +216,9 @@ def main(args):
     )
 
     face_transfer.main(new_args, id_codedict)
+    print(f"[Time] Face Transfer: {time.time() - start_transfer:.2f} seconds")
 
+    print(f"[Total Time] All processes completed in {time.time() - start_all:.2f} seconds")
 
 if __name__ == '__main__':
     try:

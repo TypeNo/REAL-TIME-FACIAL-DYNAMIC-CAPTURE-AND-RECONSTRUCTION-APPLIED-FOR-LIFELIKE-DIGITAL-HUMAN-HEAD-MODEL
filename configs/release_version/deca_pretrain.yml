@@ -10,11 +10,12 @@
 # 
 # 
 # '''
-output_dir: "/ps/scratch/yfeng/Data/Projects-data/DECA-training/training/DECA_release_version/pretrain"
+output_dir: "ps/scratch/yfeng/Data/Projects-data/DECA-training/training/DECA_release_version/pretrain"
 #output_dir: "/ps/scratch/yfeng/Data/Projects-data/DECA-training/training/DECA_release_version/pretrain"
 pretrained_modelpath: ''
 dataset:
   batch_size: 64
+  #batch_size: 8
   K: 1
 loss:
   photo: 0.
@@ -32,3 +33,4 @@ train:
   checkpoint_steps: 1000
   val_steps: 500
   eval_steps: 1000
+

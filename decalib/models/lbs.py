@@ -177,6 +177,25 @@ def lbs(betas, pose, v_template, shapedirs, posedirs, J_regressor, parents,
             The joints of the model
     '''
 
+    # Add dtype conversion
+    # if v_template.dtype != shapedirs.dtype:
+    #     if v_template.dtype == torch.float16:
+    #         shapedirs = shapedirs.to(torch.float32)
+    #         posedirs = posedirs.to(torch.float32)
+    #     else:
+    #         v_template = v_template.to(shapedirs.dtype)
+
+    # Save original dtypes for later conversion
+    original_dtype = v_template.dtype
+    betas_dtype = betas.dtype
+    
+    # Convert to float32 for critical operations
+    v_template = v_template.float()
+    shapedirs = shapedirs.float()
+    posedirs = posedirs.float()
+    betas = betas.float()
+    pose = pose.float()
+
     batch_size = max(betas.shape[0], pose.shape[0])
     device = betas.device
 
@@ -224,6 +243,10 @@ def lbs(betas, pose, v_template, shapedirs, posedirs, J_regressor, parents,
 
     verts = v_homo[:, :, :3, 0]
 
+    # Convert back to original dtype
+    verts = verts.to(original_dtype)
+    J_transformed = J_transformed.to(original_dtype)
+
     return verts, J_transformed
 
 
@@ -267,6 +290,12 @@ def blend_shapes(betas, shape_disps):
     # Displacement[b, m, k] = sum_{l} betas[b, l] * shape_disps[m, k, l]
     # i.e. Multiply each shape displacement by its corresponding beta and
     # then sum them.
+        # Add dtype conversion
+    if betas.dtype != shape_disps.dtype:
+        if betas.dtype == torch.float16:
+            shape_disps = shape_disps.to(torch.float32)
+        else:
+            betas = betas.to(shape_disps.dtype)
     blend_shape = torch.einsum('bl,mkl->bmk', [betas, shape_disps])
     return blend_shape
 

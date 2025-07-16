@@ -18,6 +18,8 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 from . import resnet
+from torch.utils.checkpoint import checkpoint
+
 
 class ResnetEncoder(nn.Module):
     def __init__(self, outsize, last_op=None):

@@ -28,7 +28,9 @@ import scipy.io
 
 from . import detectors
 
-inputfolder = "E:\\Project\\DECA3\\DECA\\dynamic_input"
+#inputfolder = "E:\\Project\\DECA3\\DECA\\dynamic_input"
+inputfolder = "dynamic_input"
+
 
 def video2sequence0(video_path, sample_step=10):
     videofolder = os.path.splitext(video_path)[0]

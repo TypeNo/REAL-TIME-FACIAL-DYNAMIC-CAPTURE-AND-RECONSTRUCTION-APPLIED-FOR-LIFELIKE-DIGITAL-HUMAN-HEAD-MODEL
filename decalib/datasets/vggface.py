@@ -8,6 +8,7 @@ from skimage.io import imread, imsave
 from skimage.transform import estimate_transform, warp, resize, rescale
 from glob import glob
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
+from pathlib import Path
 
 class VGGFace2Dataset(Dataset):
     def __init__(self, K, image_size, scale, trans_scale = 0, isTemporal=False, isEval=False, isSingle=False):
@@ -16,14 +17,14 @@ class VGGFace2Dataset(Dataset):
         '''
         self.K = K
         self.image_size = image_size
-        self.imagefolder = '/ps/scratch/face2d3d/train'
-        self.kptfolder = '/ps/scratch/face2d3d/train_annotated_torch7'
-        self.segfolder = '/ps/scratch/face2d3d/texture_in_the_wild_code/VGGFace2_seg/test_crop_size_400_batch'
+        self.imagefolder = 'ps/scratch/face2d3d/train'
+        self.kptfolder = 'ps/scratch/face2d3d/train_annotated_torch7'
+        self.segfolder = 'ps/scratch/face2d3d/texture_in_the_wild_code/VGGFace2_seg/test_crop_size_400_batch'
         # hq:
         # datafile = '/ps/scratch/face2d3d/texture_in_the_wild_code/VGGFace2_cleaning_codes/ringnetpp_training_lists/second_cleaning/vggface2_bbx_size_bigger_than_400_train_list_max_normal_100_ring_5_1_serial.npy'
-        datafile = '/ps/scratch/face2d3d/texture_in_the_wild_code/VGGFace2_cleaning_codes/ringnetpp_training_lists/second_cleaning/vggface2_train_list_max_normal_100_ring_5_1_serial.npy'
+        datafile = 'ps/scratch/face2d3d/texture_in_the_wild_code/VGGFace2_cleaning_codes/ringnetpp_training_lists/second_cleaning/vggface2_train_list_max_normal_100_ring_5_1_serial.npy'
         if isEval:
-            datafile = '/ps/scratch/face2d3d/texture_in_the_wild_code/VGGFace2_cleaning_codes/ringnetpp_training_lists/second_cleaning/vggface2_val_list_max_normal_100_ring_5_1_serial.npy'
+            datafile = 'ps/scratch/face2d3d/texture_in_the_wild_code/VGGFace2_cleaning_codes/ringnetpp_training_lists/second_cleaning/vggface2_val_list_max_normal_100_ring_5_1_serial.npy'
         self.data_lines = np.load(datafile).astype('str')
 
         self.isTemporal = isTemporal
@@ -42,9 +43,15 @@ class VGGFace2Dataset(Dataset):
         random_ind = np.random.permutation(5)[:self.K]
         for i in random_ind:
             name = self.data_lines[idx, i]
-            image_path = os.path.join(self.imagefolder, name + '.jpg')  
-            seg_path = os.path.join(self.segfolder, name + '.npy')  
-            kpt_path = os.path.join(self.kptfolder, name + '.npy')
+            # Convert name to POSIX-style path
+            name_posix = Path(name.replace('\\', '/'))
+            # image_path = os.path.join(self.imagefolder, name + '.jpg')  
+            # seg_path = os.path.join(self.segfolder, name + '.npy')  
+            # kpt_path = os.path.join(self.kptfolder, name + '.npy')
+            # Handle paths with Pathlib
+            image_path = str((Path(self.imagefolder) / name_posix).with_suffix('.jpg'))
+            seg_path = str((Path(self.segfolder) / name_posix).with_suffix('.npy'))
+            kpt_path = str((Path(self.kptfolder) / name_posix).with_suffix('.npy'))
                                             
             image = imread(image_path)/255.
             kpt = np.load(kpt_path)[:,:2]
@@ -118,6 +125,24 @@ class VGGFace2Dataset(Dataset):
         else:
             mask = np.ones((h, w))
         return mask
+
+    # def load_mask(self, maskpath, h, w):
+    #     print(f"[DEBUG] Loading mask from: {maskpath}")
+    #     if os.path.isfile(maskpath):
+    #         vis_parsing_anno = np.load(maskpath)
+    #         print("[DEBUG] Mask file found.")
+    #         print("  Shape:", vis_parsing_anno.shape)
+    #         print("  Unique values:", np.unique(vis_parsing_anno))
+            
+    #         mask = np.zeros_like(vis_parsing_anno)
+    #         mask[vis_parsing_anno > 0.5] = 1.
+    #         print("  Output mask unique values:", np.unique(mask))
+    #     else:
+    #         print("[WARNING] Mask file not found. Using fallback.")
+    #         mask = np.ones((h, w))
+    #         print("  Fallback mask shape:", mask.shape)
+    #     return mask
+
 
 
 

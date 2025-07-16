@@ -18,6 +18,7 @@ import torch.nn as nn
 import numpy as np
 import pickle
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 
 from .lbs import lbs, batch_rodrigues, vertices2landmarks, rot_mat_to_euler
 
@@ -182,6 +183,15 @@ class FLAME(nn.Module):
                 vertices: N X V X 3
                 landmarks: N X number of landmarks X 3
         """
+        # Convert inputs to float32 if needed
+        def to_float32(tensor):
+            return tensor.to(torch.float32) if tensor is not None and tensor.dtype == torch.float16 else tensor
+
+        shape_params = to_float32(shape_params)
+        expression_params = to_float32(expression_params)
+        pose_params = to_float32(pose_params)
+        eye_pose_params = to_float32(eye_pose_params)
+        
         batch_size = shape_params.shape[0]
         if pose_params is None:
             pose_params = self.eye_pose.expand(batch_size, -1)
@@ -252,13 +262,56 @@ class FLAMETex(nn.Module):
         self.register_buffer('texture_mean', texture_mean)
         self.register_buffer('texture_basis', texture_basis)
 
+    # def forward(self, texcode):
+    #     '''
+    #     texcode: [batchsize, n_tex]
+    #     texture: [bz, 3, 256, 256], range: 0-1
+    #     '''
+    #     #texture = self.texture_mean + (self.texture_basis*texcode[:,None,:]).sum(-1)
+    #     # Replace with this memory-efficient version:
+    #     texture = self.texture_mean.unsqueeze(0).repeat(texcode.shape[0], 1, 1, 1)
+    #     for i in range(self.n_tex):
+    #         texture += self.texture_basis[i] * texcode[:, i][:, None, None, None]
+    #     texture = texture.reshape(texcode.shape[0], 512, 512, 3).permute(0,3,1,2)
+    #     texture = F.interpolate(texture, [256, 256])
+    #     texture = texture[:,[2,1,0], :,:]
+    #     return texture
+
     def forward(self, texcode):
         '''
         texcode: [batchsize, n_tex]
         texture: [bz, 3, 256, 256], range: 0-1
         '''
-        texture = self.texture_mean + (self.texture_basis*texcode[:,None,:]).sum(-1)
-        texture = texture.reshape(texcode.shape[0], 512, 512, 3).permute(0,3,1,2)
-        texture = F.interpolate(texture, [256, 256])
-        texture = texture[:,[2,1,0], :,:]
+        batch_size = texcode.shape[0]
+        if batch_size == 0:
+            return self.texture_mean.unsqueeze(0)
+        
+        # Get the correct texture basis
+        texture_basis = self.texture_basis
+        
+        # Convert basis to the proper shape [n_tex, 512*512*3]
+        if texture_basis.dim() == 3:  # [1, 200, n_tex] in BFM
+            texture_basis = texture_basis.squeeze(0).t()  # [n_tex, 200]
+        elif texture_basis.dim() == 2:  # [1, 200] for mean, but basis is [1, 200, n_tex]
+            # Already in correct format
+            pass
+        
+        # Ensure basis has shape [n_tex, vector_length]
+        vector_length = texture_basis.shape[1]
+        
+        # Compute texture vector
+        texture_vector = self.texture_mean + torch.matmul(texcode, texture_basis)
+        
+        # Reshape to image dimensions [batch_size, 512, 512, 3]
+        texture = texture_vector.view(batch_size, 512, 512, 3)
+        
+        # Convert to CHW format [B, 3, 512, 512]
+        texture = texture.permute(0, 3, 1, 2)
+        
+        # Downsample to 256x256
+        texture = F.interpolate(texture, size=256, mode='bilinear', align_corners=False)
+        
+        # BGR to RGB conversion
+        texture = texture[:, [2, 1, 0]]
+        
         return texture

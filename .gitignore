@@ -87,3 +87,10 @@ CMakePresets.json
 #output & input
 *output*
 *dynamic_input*
+
+#Training Directory
+*ps*
+NOW_validation/
+
+#Unused Directory
+*assets*

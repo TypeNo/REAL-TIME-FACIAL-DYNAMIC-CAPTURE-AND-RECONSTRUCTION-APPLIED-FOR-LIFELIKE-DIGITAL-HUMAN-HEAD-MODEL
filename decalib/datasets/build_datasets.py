@@ -31,6 +31,7 @@ def build_train(config, is_train=True):
         data_list.append(CelebAHQDataset(image_size=config.image_size, scale=[config.scale_min, config.scale_max], trans_scale=config.trans_scale))
     dataset = ConcatDataset(data_list)
     
+    
     return dataset
 
 def build_val(config, is_train=True):

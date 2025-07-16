@@ -1763,7 +1763,8 @@ void RenderFacialReconstructionTab() {
             ImGui::TextUnformatted(labelFPS);
             ImGui::PushItemWidth(inputFPSWidth);
             ImGui::DragInt("##fps", &customized_fps, 1, 1, 120, "%d");
-            customized_fps = std::max(customized_fps, 1); // Prevent 0 or negative FPS
+            //customized_fps = std::max(customized_fps, 1); // Prevent 0 or negative FPS
+            customized_fps = std::clamp(customized_fps, 1, 120);
             ImGui::PopItemWidth();
             ImGui::EndGroup();
 
