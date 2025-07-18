@@ -5,7 +5,9 @@
 - **CUDA Toolkit 12.1.0**
   > 🔸 Ensure your GPU supports this version.  
   > 🔸 [Check compatibility here](https://developer.nvidia.com/cuda-gpus)
-
+- **C++ compiler**: MSVC (Visual Studio 2022), GCC, or Clang
+- **CMake ≥ 3.22**: [Download here](https://cmake.org/download/)
+- **Python ≥ 3.11** with Anaconda/Miniconda
 ---
 
 ## 🚀 Getting Started
