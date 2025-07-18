@@ -211,13 +211,13 @@ int main()
     auto get_total = (GetProgressFunc)GetProcAddress(dll, "get_total_progress");
 
     //Python interpretator Configuration
-    std::string newPath = 
-    "E:/anaconda3/envs/pytorch3d;" 
-    "E:/anaconda3/envs/pytorch3d/Library/bin;" + 
-    std::string(std::getenv("PATH"));
-    _putenv_s("PATH", newPath.c_str());
-    _putenv_s("PYTHONHOME", "E:/anaconda3/envs/pytorch3d");
-    _putenv_s("PYTHONPATH", "E:/Project/DECA3/DECA/src");
+    // std::string newPath = 
+    // "E:/anaconda3/envs/pytorch3d;" 
+    // "E:/anaconda3/envs/pytorch3d/Library/bin;" + 
+    // std::string(std::getenv("PATH"));
+    // _putenv_s("PATH", newPath.c_str());
+    // _putenv_s("PYTHONHOME", "E:/anaconda3/envs/pytorch3d");
+    // _putenv_s("PYTHONPATH", "E:/Project/DECA3/DECA/src");
 
     try {
         py::scoped_interpreter guard{}; // Initialize interpreter
